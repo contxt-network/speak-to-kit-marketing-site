@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>For Jobseekers — Speak to Kit</title>
+<title>For Jobseekers — Speak to Kit (new copy)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,500;9..144,0,600;9..144,1,400;9..144,1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,8 +23,8 @@
 </head>
 <body>
 <div data-stk-banner style="position:sticky;top:0;z-index:9999;background:#1a1814;color:#f3ece1;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;font:500 12px/1.2 'Inter',ui-sans-serif,system-ui,sans-serif;letter-spacing:0.02em;border-bottom:1px solid rgba(255,255,255,0.08);gap:16px;flex-wrap:wrap">
-  <span><strong style="font-weight:600;color:#E19C76;letter-spacing:0.08em;text-transform:uppercase">Staging</strong><span style="opacity:0.6;margin:0 10px">·</span>Original design copy</span>
-  <a href="for-jobseekers-new-copy.html" style="color:#E19C76;text-decoration:underline;text-decoration-color:rgba(225,156,118,0.4);text-underline-offset:3px">View new copy →</a>
+  <span><strong style="font-weight:600;color:#E19C76;letter-spacing:0.08em;text-transform:uppercase">Staging</strong><span style="opacity:0.6;margin:0 10px">·</span>New copy (Dan&rsquo;s Lovable version)</span>
+  <a href="for-jobseekers.html" style="color:#E19C76;text-decoration:underline;text-decoration-color:rgba(225,156,118,0.4);text-underline-offset:3px">View original copy →</a>
 </div>
 <div id="root"></div>
 
@@ -38,7 +38,7 @@
 
 <script type="text/babel" data-presets="react">
 
-const J = window.STK_JOBSEEKER;
+const J = window.STK_JOBSEEKER_NEW;
 
 /* ---------- Tokens (Editorial — mirrors Kit Style Guide) ---------- */
 const T = {
@@ -469,7 +469,7 @@ const Page = () => {
       <header style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
                        padding:'18px 32px', borderBottom:`1px solid ${T.rule}`, background:T.creamSoft }}>
         <div style={{ display:'flex', alignItems:'center', gap:28 }}>
-          <a href="index.html" style={{ display:'inline-flex' }}><Wordmark size={18} /></a>
+          <a href="index-new-copy.html" style={{ display:'inline-flex' }}><Wordmark size={18} /></a>
           <nav style={{ display:'flex', gap:22, fontSize:13, color:T.muted }}>
             {J.nav.map((n) => (
               <a key={n.label} href={n.href}>{n.label}</a>
