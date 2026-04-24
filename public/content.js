@@ -138,7 +138,7 @@ window.STK_JOBSEEKER = {
    ========================================================== */
 window.STK_CONTENT_NEW = {
   nav: [
-    {label:'How Kit Works', href:'how-kit-works.html'},
+    {label:'How Kit Works', href:'index-new-copy.html'},
     {label:'Pricing',       href:'pricing.html'},
     {label:'For Jobseekers',href:'for-jobseekers-new-copy.html'},
   ],
@@ -230,7 +230,7 @@ window.STK_CONTENT_NEW = {
 
 window.STK_JOBSEEKER_NEW = {
   nav: [
-    {label:'How Kit Works', href:'how-kit-works.html'},
+    {label:'How Kit Works', href:'index-new-copy.html'},
     {label:'Pricing',       href:'pricing.html'},
     {label:'For Employers', href:'index-new-copy.html'},
   ],

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(command -v python)",
+      "Bash(command -v python3)",
+      "Bash(curl -s -o /dev/null -w \"index.html:%{http_code} size:%{size_download}\\\\n\" http://localhost:3456/)",
+      "Bash(curl -s -o /dev/null -w \"for-jobseekers.html:%{http_code} size:%{size_download}\\\\n\" http://localhost:3456/for-jobseekers.html)",
+      "Bash(curl -s -o /dev/null -w \"content.js:%{http_code} size:%{size_download}\\\\n\" \"http://localhost:3456/content.js?v=6\")",
+      "Bash(curl -s -o /dev/null -w \"CNAME:%{http_code} size:%{size_download}\\\\n\" http://localhost:3456/CNAME)",
+      "Bash(curl -s -o /dev/null -w \"missing-file:%{http_code}\\\\n\" http://localhost:3456/does-not-exist.html)",
+      "Bash(curl -s \"http://localhost:3456/content.js\")",
+      "Bash(curl -s http://localhost:3456/for-jobseekers.html)",
+      "Bash(gh repo *)",
+      "Bash(where gh.exe)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" --version)",
+      "Bash(attrib \"C:\\\\\\\\Users\\\\\\\\ryan_\\\\\\\\Downloads\\\\\\\\Speak to Kit Website\\\\\\\\design\\\\\\\\style-guide\\\\\\\\logo-pack\\\\\\\\kit-wordmark-kit-on-white.svg\")"
+    ]
+  }
+}
