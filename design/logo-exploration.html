@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Kit — Logo Exploration</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --clay:#B5533D;
+    --clay-soft:#E19C76;
+    --ink:#1F1C18;
+    --cream:#F3ECE1;
+    --cream-50:#FBF7F0;
+    --cream-200:#F3ECE1;
+    --cream-300:#EFE6D7;
+    --white:#FFFFFF;
+    --rule:rgba(26,24,20,0.10);
+    --rule-strong:rgba(26,24,20,0.24);
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --sans:'Inter',system-ui,sans-serif;
+    --serif:'Fraunces',Georgia,serif;
+  }
+  html,body{margin:0;padding:0;background:var(--cream);font-family:var(--sans);color:var(--ink)}
+  /* Tiny .cc-card styling so cards look right inside DCArtboard */
+  .lx-card{width:100%;height:100%;background:var(--cream-50);display:flex;flex-direction:column;position:relative}
+  .lx-card .big{flex:1;display:flex;align-items:center;justify-content:center;padding:24px}
+  .lx-card .meta{padding:16px 20px;border-top:1px solid var(--rule);background:var(--white)}
+  .lx-card .meta .num{font-family:var(--mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6b665b;margin-bottom:4px}
+  .lx-card .meta .name{font-family:var(--serif);font-weight:500;font-size:20px;letter-spacing:-0.02em;color:var(--ink);margin-bottom:4px;line-height:1.1}
+  .lx-card .meta .desc{font-size:12px;line-height:1.45;color:#6b665b}
+  .lx-card .tests{display:flex;gap:8px;padding:10px 20px;border-top:1px solid var(--rule);background:var(--cream-50);align-items:center}
+  .lx-card .tests .tlabel{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#6b665b;margin-right:auto}
+  .lx-card .tests .fav{display:flex;gap:6px;align-items:center}
+  .lx-card .tests .fav-cell{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .lx-card .tests .fav-cell.on-clay{background:var(--clay)}
+  .lx-card .tests .fav-cell.on-ink{background:var(--ink)}
+  .lx-card .tests .fav-cell.on-cream{background:var(--cream-300);border:1px solid var(--rule)}
+
+  /* Context / intro / post-it */
+  .lx-intro{padding:40px 60px 0;max-width:900px;position:relative;z-index:1}
+  .lx-intro .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#6b665b;margin-bottom:12px}
+  .lx-intro h1{font-family:var(--serif);font-weight:400;font-size:clamp(42px,5vw,64px);letter-spacing:-0.025em;margin:0 0 20px;line-height:1.02}
+  .lx-intro h1 em{font-style:italic;color:var(--clay)}
+  .lx-intro p{font-size:16px;line-height:1.6;color:#3d3a33;max-width:680px;margin:0 0 10px}
+  .lx-brief{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:32px;max-width:780px}
+  .lx-brief .b{background:var(--white);border:1px solid var(--rule);border-radius:12px;padding:14px 16px}
+  .lx-brief .b .k{font-family:var(--mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#6b665b;margin-bottom:4px}
+  .lx-brief .b .v{font-size:13px;line-height:1.35;color:var(--ink);font-weight:500}
+</style>
+</head>
+<body>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-presets="react" src="logos/design-canvas.jsx"></script>
+<script type="text/babel" data-presets="react" src="logos/logo-marks.jsx"></script>
+<script type="text/babel" data-presets="react">
+const { DesignCanvas, DCSection, DCArtboard, DCPostIt } = window;
+const { LogoCard, LOGOS } = window;
+
+function Intro() {
+  return (
+    <div className="lx-intro">
+      <div className="eyebrow">Logo Exploration · 12 directions</div>
+      <h1>Twelve ways<br/>to be <em>Kit</em>.</h1>
+      <p>The current mark is a tint of Contxt's logomark. Useful placeholder, not a brand. This sheet puts twelve distinct directions next to each other — typographic, abstract, conceptual — so we can pick the spine to iterate on.</p>
+      <p>Each mark is drawn at display size and tested at favicon scale (on clay, on ink, on cream). Click any card to focus; drag to reorder; the winner is the one that still feels like Kit at 20px.</p>
+      <div className="lx-brief">
+        <div className="b"><div className="k">Voice</div><div className="v">Editorial, conversational, warm. Not tech.</div></div>
+        <div className="b"><div className="k">Palette</div><div className="v">Clay on cream. One colour, no gradients.</div></div>
+        <div className="b"><div className="k">Metaphors</div><div className="v">Speech · shortlist of 3 · kit of tools · clarity.</div></div>
+        <div className="b"><div className="k">Constraint</div><div className="v">Works as a 20px favicon. One flat colour.</div></div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <>
+      <Intro/>
+      <DesignCanvas style={{ height:'calc(100vh - 0px)' }}>
+        <DCSection id="typographic" title="Typographic · 4 directions" subtitle="Letterforms doing the work. Low-risk, high recognition.">
+          {LOGOS.filter(l => l.group === 'typographic').map(l => (
+            <DCArtboard key={l.id} id={l.id} label={l.label} width={360} height={480}>
+              <LogoCard logo={l}/>
+            </DCArtboard>
+          ))}
+        </DCSection>
+
+        <DCSection id="abstract" title="Abstract · 5 directions" subtitle="The metaphor is visual, not literal. Room to grow.">
+          {LOGOS.filter(l => l.group === 'abstract').map(l => (
+            <DCArtboard key={l.id} id={l.id} label={l.label} width={360} height={480}>
+              <LogoCard logo={l}/>
+            </DCArtboard>
+          ))}
+          <DCPostIt top={60} right={40} rotate={2}>The favicon row under each card is the final test — a mark that survives 20px is a mark worth iterating on.</DCPostIt>
+        </DCSection>
+
+        <DCSection id="conceptual" title="Conceptual · 3 directions" subtitle="Editorial metaphors — the mark tells a tiny story.">
+          {LOGOS.filter(l => l.group === 'conceptual').map(l => (
+            <DCArtboard key={l.id} id={l.id} label={l.label} width={360} height={480}>
+              <LogoCard logo={l}/>
+            </DCArtboard>
+          ))}
+        </DCSection>
+
+        <DCSection id="reference" title="Reference · what exists today" subtitle="The Contxt mark, tinted clay. Here for comparison.">
+          <DCArtboard id="current" label="00 · Current (inherited)" width={360} height={480}>
+            <LogoCard logo={LOGOS.find(l => l.id === 'current')}/>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.body.appendChild(Object.assign(document.createElement('div'), { id:'root' }))).render(<App/>);
+</script>
+
+</body>
+</html>

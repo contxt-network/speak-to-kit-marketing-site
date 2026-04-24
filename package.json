@@ -1,0 +1,14 @@
+{
+  "name": "speak-to-kit-website",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Marketing site for Speak to Kit. Static HTML served from /public.",
+  "scripts": {
+    "dev": "serve public -l 3000",
+    "deploy": "gh-pages -d public -b gh-pages --dotfiles"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.1.1",
+    "serve": "^14.2.3"
+  }
+}
