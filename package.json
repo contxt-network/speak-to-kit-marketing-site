@@ -5,10 +5,13 @@
   "description": "Marketing site for Speak to Kit. Static HTML served from /public.",
   "scripts": {
     "dev": "serve public -l 3000",
-    "deploy": "gh-pages -d public -b gh-pages --dotfiles"
+    "deploy": "gh-pages -d public -b gh-pages --dotfiles",
+    "screenshots:baseline": "node scripts/screenshots.mjs baseline",
+    "screenshots:after": "node scripts/screenshots.mjs after"
   },
   "devDependencies": {
     "gh-pages": "^6.1.1",
+    "playwright": "^1.48.0",
     "serve": "^14.2.3"
   }
 }
