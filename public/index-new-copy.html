@@ -913,15 +913,22 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
       </section>
 
       {/* Stats strip — dramatic numerals */}
-      <section style={{ background: dark ? '#3a3935' : '#ffffff', borderTop: `1px solid ${rule}`, borderBottom: `1px solid ${rule}` }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: `repeat(${C.stats.length},1fr)` }}>
+      <section className="stk-stats-section" style={{ background: dark ? '#3a3935' : '#ffffff', borderTop: `1px solid ${rule}`, borderBottom: `1px solid ${rule}` }}>
+        <div className="stk-stats-grid" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: `repeat(${C.stats.length},1fr)` }}>
           {C.stats.map((s, i) =>
-          <div key={i} style={{ padding: '56px 28px', textAlign: 'center', borderLeft: i === 0 ? 'none' : `1px solid ${rule}` }}>
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 'clamp(56px, 6.5vw, 88px)', color: fg, letterSpacing: '-0.045em', lineHeight: 1, fontWeight: 400 }}>{s.big}</div>
-              <div style={{ fontSize: 12, color: muted, marginTop: 14, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500 }}>{s.small}</div>
+          <div key={i} className="stk-stat-cell" style={{ padding: '64px 32px', textAlign: 'center', borderLeft: i === 0 ? 'none' : `1px solid ${rule}` }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 'clamp(52px, 6.2vw, 80px)', color: fg, letterSpacing: '-0.035em', lineHeight: 1, fontWeight: 400, fontOpticalSizing: 'auto', fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum"' }}>{s.big}</div>
+              <div style={{ fontSize: 13, color: muted, marginTop: 16, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 500, lineHeight: 1.4 }}>{s.small}</div>
             </div>
           )}
         </div>
+        <style>{`
+          @media (max-width: 720px) {
+            .stk-stats-grid { grid-template-columns: 1fr !important; }
+            .stk-stat-cell { border-left: 0 !important; border-top: 1px solid ${rule}; padding: 40px 24px !important; }
+            .stk-stat-cell:first-child { border-top: 0; }
+          }
+        `}</style>
       </section>
 
       {/* Problem */}

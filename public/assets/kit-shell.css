@@ -295,14 +295,17 @@ img { max-width: 100%; display: block; }
 .stk-stat-big {
   font-family: var(--font-display);
   font-size: clamp(40px, 5vw, 72px);
-  font-weight: 400; letter-spacing: -0.045em;
+  font-weight: 400; letter-spacing: -0.035em;
   color: var(--ink-700); line-height: 1;
+  font-optical-sizing: auto;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 .stk-stat-small {
-  font-size: 12px; color: var(--ink-400);
-  margin-top: 14px;
-  letter-spacing: 0.04em; text-transform: uppercase;
-  font-weight: 500;
+  font-size: 13px; color: var(--ink-400);
+  margin-top: 16px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  font-weight: 500; line-height: 1.4;
 }
 @media (max-width: 640px) {
   .stk-stats { grid-template-columns: 1fr; }
