@@ -26,6 +26,12 @@
   --font-sans:    'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Fraunces', Georgia, ui-serif, serif;
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+  /* Radius scale — single source of truth for static-page components. */
+  --radius-sm: 6px;
+  --radius-md: 10px;   /* inputs, chat bubbles */
+  --radius-lg: 16px;   /* default cards */
+  --radius-xl: 20px;   /* pricing cards, feature cards */
+  --radius-pill: 999px;
   --max-shell: 1200px;
   --max-prose: 720px;
 }
@@ -96,7 +102,7 @@ img { max-width: 100%; display: block; }
 .stk-btn {
   display: inline-flex; align-items: center; justify-content: center;
   font-weight: 600; font-size: 13px;
-  padding: 8px 16px; border-radius: 999px;
+  padding: 8px 16px; border-radius: var(--radius-pill);
   transition: background 160ms ease;
 }
 .stk-btn-primary { background: var(--clay-500); color: #fff; box-shadow: 0 6px 20px -8px rgba(181, 83, 61, 0.4); }
@@ -210,7 +216,7 @@ img { max-width: 100%; display: block; }
 .stk-card {
   background: #fff;
   border: 1px solid var(--rule);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 28px;
 }
 .stk-card h3 {
@@ -224,7 +230,7 @@ img { max-width: 100%; display: block; }
 .stk-step-card {
   background: #fff;
   border: 1px solid var(--rule);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 32px 28px;
   position: relative;
 }
@@ -248,7 +254,7 @@ img { max-width: 100%; display: block; }
 .stk-pricing-card {
   background: #fff;
   border: 1px solid var(--rule);
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   padding: 32px 28px;
   display: flex; flex-direction: column;
   position: relative;
@@ -260,7 +266,7 @@ img { max-width: 100%; display: block; }
 .stk-pricing-card .tag {
   position: absolute; top: -12px; right: 24px;
   background: var(--clay-500); color: #fff;
-  padding: 4px 12px; border-radius: 999px;
+  padding: 4px 12px; border-radius: var(--radius-pill);
   font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -377,7 +383,7 @@ img { max-width: 100%; display: block; }
   font-size: 15px;
   padding: 12px 14px;
   border: 1px solid var(--rule);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: #fff;
   color: var(--ink-700);
   outline: none;
@@ -399,7 +405,7 @@ img { max-width: 100%; display: block; }
   max-width: 640px; margin: 0 auto;
   background: #fff;
   border: 1px solid var(--rule);
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   padding: 28px;
 }
 .stk-chat-header {
@@ -414,7 +420,7 @@ img { max-width: 100%; display: block; }
 .stk-bubble {
   max-width: 85%;
   padding: 12px 16px;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   margin-bottom: 10px;
   line-height: 1.5; font-size: 15px;
 }
