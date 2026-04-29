@@ -1113,12 +1113,31 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
         </div>
       </section>
 
-      {/* Testimonials — single carousel, centred */}
+      {/* Testimonials — 3×2 grid (T8) */}
       <section style={{ background: dark ? '#3a3935' : '#ece2d1', padding: '110px 32px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: primary, letterSpacing: '0.22em', marginBottom: 14, fontWeight: 600 }}>{C.testimonials.kicker}</div>
-          <p style={{ fontSize: 15, color: muted, margin: '0 auto 56px', maxWidth: 520 }}>{C.testimonials.sub}</p>
-          <TestimonialCarousel primary={primary} dark={dark} surface={surface} rule={rule} fg={fg} muted={muted} items={[C.testimonials.hero || { tag: 'AI convert', quote: 'It may have altered in a positive sense my willingness for engaging with AI.', name: 'Mathew C.' }, ...C.testimonials.items]} speedSec={6} />
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <div style={{ fontSize: 11, color: primary, letterSpacing: '0.22em', marginBottom: 14, fontWeight: 600 }}>{C.testimonials.kicker}</div>
+            <p style={{ fontSize: 15, color: muted, margin: '0 auto', maxWidth: 520 }}>{C.testimonials.sub}</p>
+          </div>
+          <div className="stk-testimonial-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18 }}>
+            {[C.testimonials.hero, ...C.testimonials.items].slice(0, 6).map((t, i) =>
+              <div key={i} style={{ background: surface, border: `1px solid ${rule}`, borderRadius: 14, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 999, background: `linear-gradient(135deg, ${primary} 0%, ${primary}aa 100%)`, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 600, letterSpacing: '-0.01em', flexShrink: 0 }}>{(t.name || '').split(/\s+/).map(p => p[0]).slice(0, 2).join('')}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: fg, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
+                    <div style={{ fontSize: 10.5, color: primary, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginTop: 2 }}>{t.tag}</div>
+                  </div>
+                </div>
+                <p style={{ margin: 0, fontFamily: "'Fraunces', serif", fontWeight: 400, fontStyle: 'italic', fontOpticalSizing: 'auto', fontSize: 16, color: fg, lineHeight: 1.4, letterSpacing: '-0.005em' }}>&ldquo;{t.quote}&rdquo;</p>
+              </div>
+            )}
+          </div>
+          <style>{`
+            @media (max-width: 880px) { .stk-testimonial-grid { grid-template-columns: 1fr 1fr !important; } }
+            @media (max-width: 540px) { .stk-testimonial-grid { grid-template-columns: 1fr !important; } }
+          `}</style>
         </div>
       </section>
 
