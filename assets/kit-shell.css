@@ -24,8 +24,8 @@
   --rule: rgba(26, 24, 20, 0.10);
   --rule-strong: rgba(26, 24, 20, 0.20);
   --font-sans:    'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Fraunces', Georgia, ui-serif, serif;
-  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'Geist', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    'Geist Mono', ui-monospace, 'JetBrains Mono', monospace;
   /* Radius scale — single source of truth for static-page components. */
   --radius-sm: 6px;
   --radius-md: 10px;   /* inputs, chat bubbles */

@@ -6,7 +6,7 @@
 <title>For Jobseekers — Speak to Kit</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,500;9..144,0,600;9..144,1,400;9..144,1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{box-sizing:border-box}
   html,body{margin:0;padding:0}
@@ -240,7 +240,7 @@ const HeroCapsule = ({ onSpeak }) => {
             <span style={{ color: recording ? T.primary : T.muted, fontWeight:600, letterSpacing:'-0.005em' }}>
               {recording ? 'Listening…' : 'Tap to start. Ten minutes, at your pace.'}
             </span>
-            {recording && <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:12, color:T.primary }}>{fmt(elapsed)}</span>}
+            {recording && <span style={{ fontFamily:"'Geist Mono', monospace", fontSize:12, color:T.primary }}>{fmt(elapsed)}</span>}
           </div>
           <Waveform active={recording} color={recording ? T.primary : T.muted} bars={38} height={40} thin />
         </div>
@@ -278,7 +278,7 @@ const ConversationMock = () => {
       <div style={{ display:'flex', alignItems:'center', gap:12, padding:'18px 22px', borderBottom:`1px solid ${T.rule}`, background:T.surface }}>
         <span style={{ width:8, height:8, borderRadius:999, background:T.success, boxShadow:`0 0 0 4px ${T.success}22`, animation:'stk-livepulse 1.4s ease-in-out infinite' }} />
         <span style={{ fontSize:11, color:T.muted, letterSpacing:'0.2em', fontWeight:600 }}>LIVE · VOICE CONVERSATION</span>
-        <span style={{ marginLeft:'auto', fontFamily:"'JetBrains Mono',monospace", fontSize:11, color:T.muted }}>07:42</span>
+        <span style={{ marginLeft:'auto', fontFamily:"'Geist Mono', monospace", fontSize:11, color:T.muted }}>07:42</span>
       </div>
       {/* Active waveform band */}
       <div style={{ padding:'14px 22px 10px', background:`linear-gradient(to bottom, ${T.primary}06, transparent)` }}>
@@ -298,7 +298,7 @@ const ConversationMock = () => {
               fontSize:14.5, lineHeight:1.5,
               background: l.who==='kit' ? T.cream : `${T.primary}15`,
               color: l.who==='kit' ? T.ink : T.primary,
-              fontFamily: l.who==='kit' ? "'Fraunces', serif" : "'Inter', sans-serif",
+              fontFamily: l.who==='kit' ? "'Geist', sans-serif" : "'Inter', sans-serif",
               fontStyle: l.who==='kit' ? 'italic' : 'normal',
               fontWeight: l.who==='kit' ? 400 : 500,
             }}>
@@ -339,7 +339,7 @@ const MatchWidget = () => {
                   boxShadow:'0 22px 60px -22px rgba(26,24,20,0.18)', padding:'22px 22px 20px' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:14 }}>
         <div style={{ fontSize:11, color:T.primary, letterSpacing:'0.22em', fontWeight:600 }}>AFTER YOUR CONVERSATION</div>
-        <div style={{ fontSize:11, color:T.muted, fontFamily:"'JetBrains Mono',monospace" }}>3 of 14 matches</div>
+        <div style={{ fontSize:11, color:T.muted, fontFamily:"'Geist Mono', monospace" }}>3 of 14 matches</div>
       </div>
       <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
         {roles.map((r, i) => {
@@ -353,20 +353,20 @@ const MatchWidget = () => {
               opacity: on ? 1 : 0, transform: on ? 'translateY(0)' : 'translateY(10px)',
               transition:'opacity 520ms ease, transform 520ms ease',
             }}>
-              <div style={{ width:42, height:42, borderRadius:10, background:`linear-gradient(135deg, ${T.primary} 0%, ${T.primary}aa 100%)`, display:'grid', placeItems:'center', color:'#fff', fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:500 }}>
+              <div style={{ width:42, height:42, borderRadius:10, background:`linear-gradient(135deg, ${T.primary} 0%, ${T.primary}aa 100%)`, display:'grid', placeItems:'center', color:'#fff', fontFamily:"'Geist', sans-serif", fontSize:18, fontWeight:500 }}>
                 {r.co[0]}
               </div>
               <div style={{ minWidth:0 }}>
                 <div style={{ fontSize:14.5, fontWeight:700, color:T.ink, letterSpacing:'-0.01em' }}>
                   {r.role} <span style={{ color:T.muted, fontWeight:400 }}>· {r.co}</span>
                 </div>
-                <div style={{ fontSize:12.5, color:T.muted, fontStyle:'italic', fontFamily:"'Fraunces',serif", lineHeight:1.4, marginTop:3 }}>
+                <div style={{ fontSize:12.5, color:T.muted, fontStyle:'italic', fontFamily:"'Geist', sans-serif", lineHeight:1.4, marginTop:3 }}>
                   “{r.why}”
                 </div>
               </div>
               <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:2 }}>
                 <div style={{ display:'flex', alignItems:'baseline', gap:1 }}>
-                  <span style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:400, color:T.ink, letterSpacing:'-0.02em', lineHeight:1 }}>{r.fit}</span>
+                  <span style={{ fontFamily:"'Geist', sans-serif", fontSize:22, fontWeight:400, color:T.ink, letterSpacing:'-0.02em', lineHeight:1 }}>{r.fit}</span>
                   <span style={{ fontSize:11, color:T.muted }}>%</span>
                 </div>
                 <div style={{ fontSize:9, color:T.muted, letterSpacing:'0.16em', fontWeight:600 }}>MATCH</div>
@@ -395,7 +395,7 @@ const SpineNode = ({ n, side = 'left', bg, compact = false, children }) => {
         width: compact?32:38, height: compact?32:38, borderRadius:999,
         background: bg, border:`1px solid ${T.primary}`,
         display:'grid', placeItems:'center',
-        fontFamily:"'Fraunces', serif", fontSize: compact?12:13, color:T.primary, fontWeight:500, zIndex:2,
+        fontFamily:"'Geist', sans-serif", fontSize: compact?12:13, color:T.primary, fontWeight:500, zIndex:2,
       }}>{n}</div>
       <div aria-hidden="true" style={{
         position:'absolute', top: compact?16:19,
@@ -421,9 +421,9 @@ const TestimonialCarousel = ({ items, speedSec = 6 }) => {
   return (
     <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} style={{ position:'relative', width:'100%' }}>
       <figure key={idx} style={{ margin:0, display:'grid', gridTemplateColumns:'auto 1fr', gap:28, alignItems:'start', width:'100%', animation:'stk-fade-in 480ms ease-out both' }}>
-        <div style={{ fontFamily:"'Fraunces',serif", fontSize:120, color:T.primary, lineHeight:0.7, letterSpacing:'-0.04em' }}>“</div>
+        <div style={{ fontFamily:"'Geist', sans-serif", fontSize:120, color:T.primary, lineHeight:0.7, letterSpacing:'-0.04em' }}>“</div>
         <div>
-          <blockquote style={{ margin:0, fontFamily:"'Fraunces',serif", fontStyle:'italic', fontWeight:400, fontSize:'clamp(30px, 3.6vw, 48px)', lineHeight:1.15, letterSpacing:'-0.02em', color:T.ink, textWrap:'pretty' }}>
+          <blockquote style={{ margin:0, fontFamily:"'Geist', sans-serif", fontStyle:'italic', fontWeight:400, fontSize:'clamp(30px, 3.6vw, 48px)', lineHeight:1.15, letterSpacing:'-0.02em', color:T.ink, textWrap:'pretty' }}>
             {t.quote}
           </blockquote>
           <figcaption style={{ marginTop:24, display:'flex', alignItems:'center', gap:14, fontSize:14, color:T.ink }}>
@@ -497,7 +497,7 @@ const Page = () => {
             FOR JOBSEEKERS
           </div>
           <h1 style={{
-            fontFamily:"'Fraunces', serif", fontWeight:400,
+            fontFamily:"'Geist', sans-serif", fontWeight:400,
             fontSize:'clamp(52px, 7vw, 96px)', letterSpacing:'-0.028em', lineHeight:1.0,
             margin:'0 0 22px', color:T.ink,
           }}>
@@ -536,7 +536,7 @@ const Page = () => {
             { big:'100%',     small:'confidential — nothing shared without your word' },
           ].map((s, i) => (
             <div key={i} style={{ padding:'56px 28px', textAlign:'center', borderLeft: i===0 ? 'none' : `1px solid ${T.rule}` }}>
-              <div style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(48px, 5.6vw, 80px)', color:T.ink, letterSpacing:'-0.04em', lineHeight:1, fontWeight:400 }}>{s.big}</div>
+              <div style={{ fontFamily:"'Geist', sans-serif", fontSize:'clamp(48px, 5.6vw, 80px)', color:T.ink, letterSpacing:'-0.04em', lineHeight:1, fontWeight:400 }}>{s.big}</div>
               <div style={{ fontSize:12, color:T.muted, marginTop:14, letterSpacing:'0.04em', textTransform:'uppercase', fontWeight:500 }}>{s.small}</div>
             </div>
           ))}
@@ -548,7 +548,7 @@ const Page = () => {
         <div style={{ maxWidth:1200, margin:'0 auto', display:'grid', gridTemplateColumns:'1fr 2fr', gap:60 }}>
           <div>
             <div style={{ fontSize:11, color:T.primary, letterSpacing:'0.22em', marginBottom:14, fontWeight:600 }}>THE IDEA</div>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontWeight:400, fontSize:44, letterSpacing:'-0.02em', lineHeight:1.05, margin:0 }}>
+            <h2 style={{ fontFamily:"'Geist', sans-serif", fontWeight:400, fontSize:44, letterSpacing:'-0.02em', lineHeight:1.05, margin:0 }}>
               The best jobs come from people who know <em style={{ fontStyle:'italic', color:T.primary }}>you're good</em>.
             </h2>
           </div>
@@ -574,7 +574,7 @@ const Page = () => {
 
           <div style={{ textAlign:'center', marginBottom:72, maxWidth:760, margin:'0 auto 72px' }}>
             <div style={{ fontSize:11, color:T.primary, letterSpacing:'0.22em', marginBottom:18, fontWeight:600 }}>HOW A CONVERSATION WITH KIT WORKS</div>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontWeight:400, fontSize:'clamp(44px, 5.2vw, 68px)', letterSpacing:'-0.025em', lineHeight:1.02, margin:0 }}>
+            <h2 style={{ fontFamily:"'Geist', sans-serif", fontWeight:400, fontSize:'clamp(44px, 5.2vw, 68px)', letterSpacing:'-0.025em', lineHeight:1.02, margin:0 }}>
               One conversation. <em style={{ fontStyle:'italic', color:T.primary }}>Roles that already want you.</em>
             </h2>
           </div>
@@ -597,7 +597,7 @@ const Page = () => {
                 { n:'03', title:'Kit builds a picture of where you thrive',      body:'The ingredients of your best work — not a job title, not a list of skills. What makes the next role actually fit.' },
               ].map((s) => (
                 <SpineNode key={s.n} n={s.n} side="left" bg={T.inkDeep}>
-                  <h3 style={{ margin:'0 0 10px', fontFamily:"'Fraunces',serif", fontWeight:400, fontSize:26, letterSpacing:'-0.02em', lineHeight:1.12 }}>{s.title}</h3>
+                  <h3 style={{ margin:'0 0 10px', fontFamily:"'Geist', sans-serif", fontWeight:400, fontSize:26, letterSpacing:'-0.02em', lineHeight:1.12 }}>{s.title}</h3>
                   <p style={{ margin:0, fontSize:14.5, lineHeight:1.6, color:'rgba(243,236,225,0.7)' }}>{s.body}</p>
                 </SpineNode>
               ))}
@@ -606,7 +606,7 @@ const Page = () => {
             {/* "Then." divider */}
             <div style={{ position:'relative', padding:'40px 0', display:'flex', justifyContent:'center' }}>
               <div style={{ position:'relative', background:T.inkDeep, padding:'18px 36px', textAlign:'center', display:'inline-flex', flexDirection:'column', alignItems:'center', gap:8, zIndex:2 }}>
-                <div style={{ fontFamily:"'Fraunces',serif", fontStyle:'italic', fontWeight:400, fontSize:'clamp(56px, 6vw, 84px)', color:T.primary, letterSpacing:'-0.03em', lineHeight:0.9 }}>Then.</div>
+                <div style={{ fontFamily:"'Geist', sans-serif", fontStyle:'italic', fontWeight:400, fontSize:'clamp(56px, 6vw, 84px)', color:T.primary, letterSpacing:'-0.03em', lineHeight:0.9 }}>Then.</div>
                 <div style={{ fontSize:11, color:'rgba(243,236,225,0.6)', letterSpacing:'0.24em', fontWeight:600 }}>KIT GOES QUIETLY TO WORK</div>
               </div>
             </div>
@@ -621,7 +621,7 @@ const Page = () => {
                 { n:'06', title:'Tells you the truth, specifically',      body:'If a role isn\u2019t right, Kit tells you exactly why — and what would make it yours next time.' },
               ].map((s) => (
                 <SpineNode key={s.n} n={s.n} side="right" bg={T.inkDeep}>
-                  <h3 style={{ margin:'0 0 10px', fontFamily:"'Fraunces',serif", fontWeight:400, fontSize:26, letterSpacing:'-0.02em', lineHeight:1.12 }}>{s.title}</h3>
+                  <h3 style={{ margin:'0 0 10px', fontFamily:"'Geist', sans-serif", fontWeight:400, fontSize:26, letterSpacing:'-0.02em', lineHeight:1.12 }}>{s.title}</h3>
                   <p style={{ margin:0, fontSize:14.5, lineHeight:1.6, color:'rgba(243,236,225,0.7)' }}>{s.body}</p>
                 </SpineNode>
               ))}
@@ -651,7 +651,7 @@ const Page = () => {
         <div style={{ maxWidth:1200, margin:'0 auto' }}>
           <div style={{ textAlign:'center', maxWidth:720, margin:'0 auto 60px' }}>
             <div style={{ fontSize:11, color:T.primary, letterSpacing:'0.22em', marginBottom:14, fontWeight:600 }}>WHAT KIT SOUNDS LIKE</div>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontWeight:400, fontSize:'clamp(40px, 4.8vw, 60px)', letterSpacing:'-0.025em', lineHeight:1.05, margin:0 }}>
+            <h2 style={{ fontFamily:"'Geist', sans-serif", fontWeight:400, fontSize:'clamp(40px, 4.8vw, 60px)', letterSpacing:'-0.025em', lineHeight:1.05, margin:0 }}>
               A real conversation. Not a form with a friendly voice.
             </h2>
           </div>
@@ -662,8 +662,8 @@ const Page = () => {
                 <div key={i} style={{ paddingLeft:20, position:'relative' }}>
                   <span style={{ position:'absolute', left:0, top:8, width:3, height:'calc(100% - 14px)', background:T.primary, opacity:0.25, borderRadius:2 }} />
                   <div style={{ display:'flex', alignItems:'baseline', gap:12, marginBottom:6 }}>
-                    <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:11, color:T.primary, fontWeight:600 }}>{String(i+1).padStart(2,'0')}</span>
-                    <h3 style={{ margin:0, fontFamily:"'Fraunces',serif", fontWeight:400, fontSize:22, letterSpacing:'-0.015em', color:T.ink }}>{f.title}</h3>
+                    <span style={{ fontFamily:"'Geist Mono', monospace", fontSize:11, color:T.primary, fontWeight:600 }}>{String(i+1).padStart(2,'0')}</span>
+                    <h3 style={{ margin:0, fontFamily:"'Geist', sans-serif", fontWeight:400, fontSize:22, letterSpacing:'-0.015em', color:T.ink }}>{f.title}</h3>
                   </div>
                   <p style={{ margin:0, paddingLeft:28, fontSize:15, lineHeight:1.55, color:T.muted }}>{f.body}</p>
                 </div>
@@ -693,7 +693,7 @@ const Page = () => {
         <AmbientWave color={T.cream} />
         <div style={{ position:'relative', zIndex:1, maxWidth:760, margin:'0 auto' }}>
           <h2 style={{
-            fontFamily:"'Fraunces', serif", fontWeight:400,
+            fontFamily:"'Geist', sans-serif", fontWeight:400,
             fontSize:'clamp(46px, 6vw, 80px)', letterSpacing:'-0.025em',
             lineHeight:1.02, margin:'0 0 20px', color:T.cream,
           }}>
