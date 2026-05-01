@@ -452,8 +452,12 @@ const HeroJourneyCapsule = ({ primary, dark, surface, rule, fg, muted, jd, setJd
   return (
     <div style={{ maxWidth: large ? 820 : 680, margin: '0 auto', textAlign: 'left' }}>
       <div onClick={activate} style={{
-        background: surface, border: `1px solid ${rule}`, borderRadius: radius,
-        boxShadow: dark ? '0 36px 96px -28px rgba(0,0,0,0.75)' : '0 28px 80px -24px rgba(26,24,20,0.28)',
+        background: surface,
+        border: `1px solid ${dark ? 'rgba(243,236,225,0.18)' : 'rgba(26,24,20,0.16)'}`,
+        borderRadius: radius,
+        boxShadow: dark
+          ? '0 40px 110px -28px rgba(0,0,0,0.85), 0 8px 24px -8px rgba(0,0,0,0.35)'
+          : '0 32px 84px -16px rgba(26,24,20,0.45), 0 6px 18px -6px rgba(26,24,20,0.18)',
         padding: padTop,
         cursor: step === 'idle' ? 'text' : 'default'
       }}>
@@ -512,7 +516,13 @@ const HeroJourneyCapsule = ({ primary, dark, surface, rule, fg, muted, jd, setJd
         </div>
       </div>
       {submission === 'error' && <SubmitError muted={muted} />}
-      <style>{`@keyframes stk-cursor{0%,50%{opacity:1}50.01%,100%{opacity:0}}@keyframes stk-spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`
+        @keyframes stk-cursor{0%,50%{opacity:1}50.01%,100%{opacity:0}}
+        @keyframes stk-spin{to{transform:rotate(360deg)}}
+        @media (max-width: 720px) {
+          .stk-live-transcript--home { height: 920px !important; }
+        }
+      `}</style>
     </div>);
 
 };
@@ -766,7 +776,7 @@ const LiveConversation = ({ primary }) => {
       <div style={{ padding: '14px 22px 10px', background: `linear-gradient(to bottom, ${primary}10, transparent)` }}>
         <Waveform active={true} color={primary} bars={56} height={36} thin />
       </div>
-      <div style={{ padding: '8px 22px 22px', display: 'flex', flexDirection: 'column', gap: 14, height: 380, overflow: 'hidden' }}>
+      <div className="stk-live-transcript stk-live-transcript--home" style={{ padding: '8px 22px 22px', display: 'flex', flexDirection: 'column', gap: 14, height: 680, overflow: 'hidden' }}>
         {script.slice(0, shown).map((l, i) =>
           <div key={i} style={{ animation: 'stk-fade-in 500ms ease-out both', alignSelf: l.from === 'user' ? 'flex-end' : 'flex-start', maxWidth: '88%' }}>
             <div style={{ fontSize: 10.5, color: l.from === 'kit' ? primary : mutedInk, fontWeight: 600, letterSpacing: '0.16em', marginBottom: 4, textAlign: l.from === 'user' ? 'right' : 'left' }}>{speakerLabel(l.from)}</div>

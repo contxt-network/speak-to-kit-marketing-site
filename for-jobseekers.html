@@ -285,7 +285,7 @@ const ConversationMock = () => {
         <Waveform active={true} color={T.primary} bars={56} height={36} thin />
       </div>
       {/* Transcript — fixed height so the page doesn't reflow as messages arrive */}
-      <div style={{ padding:'8px 22px 22px', display:'flex', flexDirection:'column', gap:14, height:380, overflow:'hidden' }}>
+      <div className="stk-live-transcript stk-live-transcript--js" style={{ padding:'8px 22px 22px', display:'flex', flexDirection:'column', gap:14, height:520, overflow:'hidden' }}>
         {script.slice(0, shown).map((l, i) => (
           <div key={i} style={{ animation:'stk-fade-in 500ms ease-out both', alignSelf: l.who==='you' ? 'flex-end' : 'flex-start', maxWidth:'86%' }}>
             <div style={{ fontSize:10.5, color: l.who==='kit' ? T.primary : T.muted, fontWeight:600, letterSpacing:'0.16em', marginBottom:4, textAlign: l.who==='you'?'right':'left' }}>
@@ -316,6 +316,7 @@ const ConversationMock = () => {
         @keyframes stk-fade-in{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
         @keyframes stk-livepulse{0%,100%{opacity:1}50%{opacity:0.45}}
         @keyframes stk-typing{0%,60%,100%{opacity:0.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+        @media (max-width: 720px) { .stk-live-transcript--js { height: 700px !important; } }
       `}</style>
     </div>
   );
