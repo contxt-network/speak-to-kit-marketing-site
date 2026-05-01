@@ -728,6 +728,71 @@ const CallInProgress = ({ primary, dark, surface, rule, fg, muted }) => {
 
 };
 
+/* Live conversation — animated chat unfold mirrored from for-jobseekers,
+   fixed transcript height so the page doesn't reflow as messages arrive. */
+const LiveConversation = ({ primary }) => {
+  const script = (C.conversation && C.conversation.chat && C.conversation.chat.bubbles) || [];
+  const [shown, setShown] = React.useState(1);
+  const [typing, setTyping] = React.useState(false);
+  const [elapsed, setElapsed] = React.useState(132);
+  React.useEffect(() => {
+    const id = setInterval(() => setElapsed((v) => v + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  React.useEffect(() => {
+    if (!script.length) return;
+    if (shown >= script.length) {
+      const r = setTimeout(() => setShown(1), 7000);
+      return () => clearTimeout(r);
+    }
+    setTyping(true);
+    const t1 = setTimeout(() => setTyping(false), 1200);
+    const t2 = setTimeout(() => setShown((v) => v + 1), 2600);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [shown]);
+  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  const speakerLabel = (from) => from === 'kit' ? 'KIT' : 'PRIYA N.';
+  const surface = '#ffffff';
+  const cardRule = 'rgba(26,24,20,0.10)';
+  const ink = '#1a1814';
+  const mutedInk = '#6b665b';
+  return (
+    <div style={{ background: surface, borderRadius: 18, boxShadow: '0 30px 80px -24px rgba(0,0,0,0.55)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 22px', borderBottom: `1px solid ${cardRule}` }}>
+        <span style={{ width: 8, height: 8, borderRadius: 999, background: '#2ea853', boxShadow: '0 0 0 4px rgba(46,168,83,0.22)', animation: 'stk-livepulse 1.4s ease-in-out infinite' }} />
+        <span style={{ fontSize: 11, color: mutedInk, letterSpacing: '0.2em', fontWeight: 600 }}>LIVE · VOICE CONVERSATION</span>
+        <span style={{ marginLeft: 'auto', fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: mutedInk }}>{fmt(elapsed)}</span>
+      </div>
+      <div style={{ padding: '14px 22px 10px', background: `linear-gradient(to bottom, ${primary}10, transparent)` }}>
+        <Waveform active={true} color={primary} bars={56} height={36} thin />
+      </div>
+      <div style={{ padding: '8px 22px 22px', display: 'flex', flexDirection: 'column', gap: 14, height: 380, overflow: 'hidden' }}>
+        {script.slice(0, shown).map((l, i) =>
+          <div key={i} style={{ animation: 'stk-fade-in 500ms ease-out both', alignSelf: l.from === 'user' ? 'flex-end' : 'flex-start', maxWidth: '88%' }}>
+            <div style={{ fontSize: 10.5, color: l.from === 'kit' ? primary : mutedInk, fontWeight: 600, letterSpacing: '0.16em', marginBottom: 4, textAlign: l.from === 'user' ? 'right' : 'left' }}>{speakerLabel(l.from)}</div>
+            <div style={{
+              padding: '12px 16px', borderRadius: 14,
+              borderTopLeftRadius: l.from === 'kit' ? 4 : 14,
+              borderTopRightRadius: l.from === 'user' ? 4 : 14,
+              fontSize: 14.5, lineHeight: 1.5,
+              background: l.from === 'kit' ? '#f3ece1' : `${primary}15`,
+              color: l.from === 'kit' ? ink : primary,
+              fontFamily: l.from === 'kit' ? "'Fraunces', serif" : "'Inter', sans-serif",
+              fontStyle: l.from === 'kit' ? 'italic' : 'normal',
+              fontWeight: l.from === 'kit' ? 400 : 500,
+            }}>{l.text}</div>
+          </div>
+        )}
+        {typing && shown < script.length &&
+          <div style={{ alignSelf: script[shown].from === 'user' ? 'flex-end' : 'flex-start', padding: '10px 14px', background: script[shown].from === 'kit' ? '#f3ece1' : `${primary}15`, borderRadius: 14, display: 'flex', gap: 4 }}>
+            {[0, 1, 2].map((i) => <span key={i} style={{ width: 6, height: 6, borderRadius: 999, background: script[shown].from === 'kit' ? mutedInk : primary, animation: `stk-typing 1.1s ease-in-out ${i * 0.14}s infinite` }} />)}
+          </div>
+        }
+      </div>
+    </div>);
+
+};
+
 /* Anatomy of a shortlist — three candidate cards emerging from waveform */
 /* Live shortlist — ticking counter, elapsed timer, transcript snippets */
 const Shortlist = ({ primary, dark, surface, rule, fg, muted }) => {
@@ -1081,7 +1146,7 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
               })}
             </div>
 
-            {/* ============= PAYOFF — Shortlist widget at foot of spine ============= */}
+            {/* ============= PAYOFF — Live conversation widget at foot of spine ============= */}
             <div style={{ position: 'relative', marginTop: 60 }}>
               {/* Terminal dot on spine — small gold filled circle, no number */}
               <div style={{ position: 'relative', textAlign: 'center', marginBottom: 26 }}>
@@ -1091,13 +1156,10 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
                   boxShadow: `0 0 0 6px ${dark2}, 0 0 0 7px ${primary}33`
                 }} />
                 <div style={{ height: 30 }} />
-                <div style={{ fontSize: 11, color: primary, letterSpacing: '0.24em', fontWeight: 600 }}>
-                  THREE PEOPLE · READY TO INTERVIEW
-                </div>
               </div>
-              {/* The live shortlist — slightly offset right */}
+              {/* The live conversation — Kit screening Priya, real-time unfold */}
               <div style={{ maxWidth: 720, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-                <Shortlist primary={primary} dark={true} surface="#2b2a28" rule="rgba(243,236,225,0.14)" fg={onDark} muted="rgba(243,236,225,0.55)" />
+                <LiveConversation primary={primary} />
               </div>
               {/* CTA under shortlist — matches the nav "Get started" pill */}
               <div style={{ textAlign: 'center', marginTop: 36 }}>
