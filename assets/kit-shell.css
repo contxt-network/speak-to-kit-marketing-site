@@ -54,29 +54,6 @@ button { font: inherit; cursor: pointer; border: 0; background: 0; color: inheri
 img { max-width: 100%; display: block; }
 ::selection { background: var(--clay-500); color: #fff; }
 
-/* ---------- STAGING BANNER ---------- */
-.stk-banner {
-  position: sticky; top: 0; z-index: 9999;
-  background: #1a1814; color: #f3ece1;
-  padding: 10px 20px;
-  display: flex; justify-content: space-between; align-items: center;
-  font: 500 12px/1.2 var(--font-sans);
-  letter-spacing: 0.02em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  gap: 16px; flex-wrap: wrap;
-}
-.stk-banner strong {
-  font-weight: 600; color: var(--clay-300);
-  letter-spacing: 0.08em; text-transform: uppercase;
-}
-.stk-banner .dot { opacity: 0.6; margin: 0 10px; }
-.stk-banner a {
-  color: var(--clay-300);
-  text-decoration: underline;
-  text-decoration-color: rgba(225, 156, 118, 0.4);
-  text-underline-offset: 3px;
-}
-
 /* ---------- HEADER ---------- */
 .stk-header {
   display: flex; justify-content: space-between; align-items: center;

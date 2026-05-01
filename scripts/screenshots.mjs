@@ -7,9 +7,9 @@ const MODE = process.argv[2] || 'baseline';
 const OUT = resolve(`screenshots/${MODE}`);
 
 const PAGES = [
-  { name: 'home',         path: '/index-new-copy.html' },
+  { name: 'home',         path: '/index.html' },
   { name: 'pricing',      path: '/pricing.html' },
-  { name: 'jobseekers',   path: '/for-jobseekers-new-copy.html' },
+  { name: 'jobseekers',   path: '/for-jobseekers.html' },
   { name: 'how-it-works', path: '/how-kit-works.html' },
   { name: 'talent-teams', path: '/for-talent-teams.html' },
 ];
