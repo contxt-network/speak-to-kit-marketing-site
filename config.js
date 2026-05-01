@@ -9,5 +9,5 @@
 window.STK_CONFIG = {
   // n8n webhook URL — receives lead capture POSTs from the hero
   // capsule. Body shape: { email, query, source, timestamp }.
-  LEAD_WEBHOOK_URL: '__CONFIGURE_BEFORE_DEPLOY__',
+  LEAD_WEBHOOK_URL: 'https://n8n.contxt.network/webhook/contxt-website-post',
 };

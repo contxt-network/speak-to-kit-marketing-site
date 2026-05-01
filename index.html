@@ -6,7 +6,7 @@
 <title>Speak to Kit</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{box-sizing:border-box}
   html,body{margin:0;padding:0}
@@ -48,48 +48,26 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 const C = window.STK_CONTENT;
 
 /* Lead capture submit — POSTs to window.STK_CONFIG.LEAD_WEBHOOK_URL.
-   Treats input containing "@" as an email, otherwise as a free-text
-   query. n8n on the receiving end routes both. */
-const submitLead = async (input) => {
+   Two-stage flow: hero capsule captures the query, modal captures
+   the email, then we send {email, query} together. */
+const submitLead = async ({ email = null, query = null, source = 'marketing-site-hero' } = {}) => {
   const url = (window.STK_CONFIG && window.STK_CONFIG.LEAD_WEBHOOK_URL) || '';
   if (!url || url === '__CONFIGURE_BEFORE_DEPLOY__') {
     throw new Error('LEAD_WEBHOOK_URL not configured');
   }
-  const value = String(input || '').trim();
-  const looksEmail = /\S+@\S+\.\S+/.test(value);
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      email: looksEmail ? value : null,
-      query: looksEmail ? null : value,
-      source: 'marketing-site-hero',
+      email: email ? String(email).trim() : null,
+      query: query ? String(query).trim() : null,
+      source,
       timestamp: new Date().toISOString(),
     }),
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   return res;
 };
-
-/* Shared "early access sent" success card — used by both capsules. */
-const SuccessCard = ({ primary, surface, rule, fg, radius = 28, maxWidth = 820 }) =>
-  <div style={{ maxWidth, margin: '0 auto' }}>
-    <div style={{ background: surface, border: '1px solid ' + rule, borderRadius: radius, boxShadow: '0 28px 80px -24px rgba(26,24,20,0.28)', padding: '40px 32px', textAlign: 'center' }}>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: primary, fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 14 }}>
-        <span style={{ width: 6, height: 6, borderRadius: 999, background: primary }} />
-        Sent
-      </div>
-      <p style={{ margin: 0, fontFamily: "'DM Serif Display', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 'clamp(20px, 1.8vw, 26px)', color: fg, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
-        Thanks. We&rsquo;ll be in touch with early access soon.
-      </p>
-    </div>
-  </div>;
-
-/* Inline submit error — sits below the capsule. */
-const SubmitError = ({ muted }) =>
-  <div style={{ marginTop: 14, fontSize: 13, color: muted, textAlign: 'center', letterSpacing: '-0.005em' }}>
-    Something went wrong &mdash; try again or email <a href="mailto:hello@speaktokit.com" style={{ color: 'inherit', textDecoration: 'underline' }}>hello@speaktokit.com</a>.
-  </div>;
 
 /* Marque (Contxt) */
 const KitMark = ({ size = 28, style = {} }) =>
@@ -109,10 +87,148 @@ const Wordmark = ({ variant = 'speak-to-kit', size = 18, primary }) => {
   return <span style={{ ...common, fontWeight: 600, fontSize: size * 0.9, letterSpacing: '-0.01em' }}>{markEl}<span>speak to <span style={{ color: markColor }}>Kit</span></span></span>;
 };
 
-/* Login modal — disabled for early-access lead capture (T6).
-   Left commented out (not deleted) so it can be reinstated later
-   without rebuilding the email/sent state machine. */
-const LoginModal = () => null;
+/* Sign-in modal — opened when the hero capsule submits.
+   Two-stage flow: capsule captures the query, modal captures the
+   email, then we POST both to n8n. On success, modal swaps to a
+   "Thanks — someone will be in touch" confirmation. */
+const LoginModal = ({ open, onClose, primary, query }) => {
+  const [email, setEmail] = React.useState('');
+  const [stage, setStage] = React.useState('idle'); // idle | sending | sent | error
+  const inputRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    setStage('idle');
+    setEmail('');
+    const t = setTimeout(() => inputRef.current?.focus(), 80);
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => { clearTimeout(t); window.removeEventListener('keydown', onKey); };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const ink = '#1a1814';
+  const cream = '#f3ece1';
+  const muted = '#6b665b';
+  const rule = 'rgba(26,24,20,0.12)';
+  const valid = /\S+@\S+\.\S+/.test(email.trim());
+
+  const submit = async () => {
+    if (!valid || stage === 'sending') return;
+    setStage('sending');
+    try {
+      await submitLead({ email: email.trim(), query: query || null, source: 'marketing-site-hero' });
+      setStage('sent');
+    } catch (e) {
+      setStage('error');
+    }
+  };
+
+  return (
+    <div role="dialog" aria-modal="true" onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      background: 'rgba(20,18,15,0.55)', backdropFilter: 'blur(6px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 24,
+      animation: 'stk-modal-fade 220ms ease-out'
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        background: '#fff', color: ink, width: '100%', maxWidth: 460,
+        borderRadius: 24, padding: '40px 36px 32px',
+        boxShadow: '0 40px 110px -20px rgba(0,0,0,0.45)',
+        position: 'relative',
+        animation: 'stk-modal-pop 260ms cubic-bezier(.2,.9,.3,1.2)'
+      }}>
+        <button onClick={onClose} aria-label="Close" style={{
+          position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: 999,
+          background: 'transparent', color: muted, display: 'grid', placeItems: 'center',
+          fontSize: 18, lineHeight: 1
+        }}>×</button>
+
+        {stage === 'sent' ? (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: primary, fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 18 }}>
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: primary }} />
+              Sent
+            </div>
+            <h2 style={{ margin: '0 0 12px', fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 28, letterSpacing: '-0.015em', lineHeight: 1.2, color: ink }}>
+              Thanks &mdash; someone will be in touch.
+            </h2>
+            <p style={{ margin: 0, fontSize: 14, color: muted, lineHeight: 1.55 }}>
+              Kit is reviewing your brief. Expect to hear from us within one working day.
+            </p>
+            <button onClick={onClose} style={{
+              marginTop: 28, background: ink, color: cream, padding: '12px 22px', borderRadius: 999,
+              fontSize: 14, fontWeight: 600, letterSpacing: '-0.005em'
+            }}>Close</button>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: primary, fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 14 }}>
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: primary }} />
+              Early access
+            </div>
+            <h2 style={{ margin: '0 0 10px', fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 30, letterSpacing: '-0.018em', lineHeight: 1.15, color: ink }}>
+              Sign in to start the search.
+            </h2>
+            <p style={{ margin: '0 0 24px', fontSize: 14, color: muted, lineHeight: 1.55 }}>
+              Drop your work email and Kit will be in touch with your hiring plan.
+            </p>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: muted, marginBottom: 8 }}>Work email</label>
+            <input
+              ref={inputRef}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
+              disabled={stage === 'sending'}
+              placeholder="you@company.com"
+              style={{
+                width: '100%', padding: '14px 16px', fontSize: 16,
+                border: `1px solid ${rule}`, borderRadius: 12, outline: 'none',
+                fontFamily: 'inherit', color: ink, background: '#fff',
+                transition: 'border-color 160ms ease, box-shadow 160ms ease',
+                opacity: stage === 'sending' ? 0.6 : 1
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 0 0 3px ${primary}22`; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = rule; e.currentTarget.style.boxShadow = 'none'; }}
+            />
+            <button onClick={submit} disabled={!valid || stage === 'sending'} style={{
+              marginTop: 16, width: '100%', padding: '14px 18px', borderRadius: 12,
+              background: valid ? primary : 'rgba(26,24,20,0.08)',
+              color: valid ? '#fff' : muted,
+              fontSize: 15, fontWeight: 600, letterSpacing: '-0.005em',
+              cursor: valid && stage !== 'sending' ? 'pointer' : 'not-allowed',
+              boxShadow: valid ? `0 12px 28px -10px ${primary}88` : 'none',
+              transition: 'background 200ms ease, box-shadow 200ms ease',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8
+            }}>
+              {stage === 'sending' ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" style={{ animation: 'stk-spin 0.9s linear infinite' }}><path d="M21 12a9 9 0 11-6.22-8.56" /></svg>
+                  Sending&hellip;
+                </>
+              ) : <>Sign in &amp; start the search</>}
+            </button>
+            {stage === 'error' && (
+              <div style={{ marginTop: 14, fontSize: 13, color: muted, textAlign: 'center' }}>
+                Something went wrong &mdash; try again or email <a href="mailto:hello@speaktokit.com" style={{ color: 'inherit', textDecoration: 'underline' }}>hello@speaktokit.com</a>.
+              </div>
+            )}
+            <p style={{ margin: '20px 0 0', fontSize: 12, color: muted, lineHeight: 1.5, textAlign: 'center' }}>
+              By continuing you agree to our <a href="privacy-policy.html" style={{ color: 'inherit', textDecoration: 'underline' }}>privacy policy</a>.
+            </p>
+          </>
+        )}
+      </div>
+      <style>{`
+        @keyframes stk-modal-fade { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes stk-modal-pop { from { opacity: 0; transform: translateY(8px) scale(0.98) } to { opacity: 1; transform: none } }
+      `}</style>
+    </div>
+  );
+};
 
 /* Spine node — one row in the narrative spine, aligned to left or right of centre vertical line */
 const SpineNode = ({ n, side = 'left', primary, fg, mutedColor, bg, compact = false, children }) => {
@@ -129,7 +245,7 @@ const SpineNode = ({ n, side = 'left', primary, fg, mutedColor, bg, compact = fa
         width: compact ? 32 : 38, height: compact ? 32 : 38, borderRadius: 999,
         background: bg, border: `1px solid ${primary}`,
         display: 'grid', placeItems: 'center',
-        fontFamily: "'DM Serif Display', serif", fontSize: compact ? 12 : 13, color: primary, fontWeight: 500,
+        fontFamily: "'Source Serif 4', serif", fontSize: compact ? 12 : 13, color: primary, fontWeight: 500,
         zIndex: 2
       }}>{n}</div>
       {/* Tick line from spine to content on the active side */}
@@ -383,10 +499,9 @@ const TYPING_LINES = [
 "Find me a technical PM with a developer-tools background\u2026"];
 
 
-/* Hero journey capsule — input → brief → attach JD → submit */
-const HeroJourneyCapsule = ({ primary, dark, surface, rule, fg, muted, jd, setJd, large = false }) => {
+/* Hero journey capsule — input → brief → attach JD → opens sign-in modal */
+const HeroJourneyCapsule = ({ primary, dark, surface, rule, fg, muted, jd, setJd, large = false, onLoginOpen }) => {
   const [step, setStep] = React.useState(jd.trim().length >= 3 ? 'ready' : 'idle');
-  const [submission, setSubmission] = React.useState('idle'); // idle | sending | success | error
   const [lineIdx, setLineIdx] = React.useState(0);
   const [typed, setTyped] = React.useState('');
   const [attached, setAttached] = React.useState(null);
@@ -425,18 +540,14 @@ const HeroJourneyCapsule = ({ primary, dark, surface, rule, fg, muted, jd, setJd
   const pickFile = () => fileRef.current?.click();
   const onFile = (e) => {const f = e.target.files?.[0];if (f) setAttached({ name: f.name, size: f.size });};
   const clearAttach = (e) => {e.stopPropagation();setAttached(null);if (fileRef.current) fileRef.current.value = '';};
-  const submit = async () => {
+  const submit = () => {
     const value = jd.trim();
-    if (value.length < 3) {inputRef.current?.focus();return;}
-    if (submission === 'sending' || submission === 'success') return;
-    setSubmission('sending');
-    try {await submitLead(value);setSubmission('success');}
-    catch (e) {setSubmission('error');}
+    if (value.length < 3) { inputRef.current?.focus(); return; }
+    if (typeof onLoginOpen === 'function') onLoginOpen();
   };
 
   const inputFont = "'Inter', ui-sans-serif, system-ui, sans-serif";
-  const sending = submission === 'sending';
-  const canContinue = jd.trim().length >= 3 && !sending;
+  const canContinue = jd.trim().length >= 3;
 
   // Hero variant of capsule supports `large` for the above-the-fold composer
   const padTop = large ? '30px 30px 22px' : '18px 18px 14px';
@@ -444,10 +555,6 @@ const HeroJourneyCapsule = ({ primary, dark, surface, rule, fg, muted, jd, setJd
   const fontSz = large ? 22 : 16;
   const cursorH = large ? 26 : 18;
   const radius = large ? 28 : 20;
-
-  if (submission === 'success') {
-    return <SuccessCard primary={primary} surface={surface} rule={rule} fg={fg} radius={radius} maxWidth={large ? 820 : 680} />;
-  }
 
   return (
     <div style={{ maxWidth: large ? 820 : 680, margin: '0 auto', textAlign: 'left' }}>
@@ -474,10 +581,10 @@ const HeroJourneyCapsule = ({ primary, dark, surface, rule, fg, muted, jd, setJd
           style={{ flex: 1, minWidth: 0, fontFamily: inputFont, fontSize: 16, color: fg, background: 'transparent', border: 0, outline: 'none', padding: 0, letterSpacing: '-0.005em' }} />
           }
           {step !== 'idle' && large &&
-          <textarea ref={inputRef} value={jd} onChange={onInputChange} disabled={sending} onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submit(); } }}
+          <textarea ref={inputRef} value={jd} onChange={onInputChange} onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submit(); } }}
           placeholder="Describe your ideal hire…"
           rows={4}
-          style={{ flex: 1, minWidth: 0, fontFamily: inputFont, fontSize: 22, color: fg, background: 'transparent', border: 0, outline: 'none', padding: 0, letterSpacing: '-0.005em', resize: 'none', lineHeight: 1.45, opacity: sending ? 0.6 : 1 }} />
+          style={{ flex: 1, minWidth: 0, fontFamily: inputFont, fontSize: 22, color: fg, background: 'transparent', border: 0, outline: 'none', padding: 0, letterSpacing: '-0.005em', resize: 'none', lineHeight: 1.45 }} />
           }
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${rule}` }}>
@@ -499,23 +606,19 @@ const HeroJourneyCapsule = ({ primary, dark, surface, rule, fg, muted, jd, setJd
           </button>
           <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.txt,.md" onChange={onFile} style={{ display: 'none' }} />
           <div style={{ flex: 1 }} />
-          <button type="button" onClick={(e) => {e.stopPropagation();submit();}} disabled={!canContinue} aria-label={sending ? 'Sending' : 'Submit'} style={{
+          <button type="button" onClick={(e) => {e.stopPropagation();submit();}} disabled={!canContinue} aria-label="Submit" style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, padding: 0, borderRadius: 999,
-            background: canContinue || sending ? primary : dark ? 'rgba(243,236,225,0.08)' : 'rgba(26,24,20,0.06)',
-            color: canContinue || sending ? '#fff' : muted,
-            boxShadow: canContinue || sending ? `0 10px 28px -10px ${primary}88` : 'none',
+            background: canContinue ? primary : dark ? 'rgba(243,236,225,0.08)' : 'rgba(26,24,20,0.06)',
+            color: canContinue ? '#fff' : muted,
+            boxShadow: canContinue ? `0 10px 28px -10px ${primary}88` : 'none',
             cursor: canContinue ? 'pointer' : 'not-allowed',
             transition: 'background 200ms ease, box-shadow 200ms ease',
             flexShrink: 0
           }}>
-            {sending ?
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" style={{ animation: 'stk-spin 0.9s linear infinite' }}><path d="M21 12a9 9 0 11-6.22-8.56" /></svg> :
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
-            }
           </button>
         </div>
       </div>
-      {submission === 'error' && <SubmitError muted={muted} />}
       <style>{`
         @keyframes stk-cursor{0%,50%{opacity:1}50.01%,100%{opacity:0}}
         @keyframes stk-spin{to{transform:rotate(360deg)}}
@@ -707,7 +810,7 @@ const CallInProgress = ({ primary, dark, surface, rule, fg, muted }) => {
         <span style={{ fontFamily: "'Geist Mono', monospace", fontSize: 12, color: muted }}>{fmt(elapsed)}</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-        <div style={{ width: 52, height: 52, borderRadius: 999, background: `linear-gradient(135deg, ${primary} 0%, ${primary}aa 100%)`, display: 'grid', placeItems: 'center', color: '#fff', fontFamily: "'DM Serif Display', serif", fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em', flexShrink: 0 }}>PN</div>
+        <div style={{ width: 52, height: 52, borderRadius: 999, background: `linear-gradient(135deg, ${primary} 0%, ${primary}aa 100%)`, display: 'grid', placeItems: 'center', color: '#fff', fontFamily: "'Source Serif 4', serif", fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em', flexShrink: 0 }}>PN</div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: fg, letterSpacing: '-0.01em' }}>Priya N.</div>
           <div style={{ fontSize: 12, color: muted, marginTop: 2 }}>Senior Engineer · Applicant #47</div>
@@ -788,7 +891,6 @@ const LiveConversation = ({ primary }) => {
               background: l.from === 'kit' ? '#f3ece1' : `${primary}15`,
               color: l.from === 'kit' ? ink : primary,
               fontFamily: "'Inter', sans-serif",
-              fontStyle: l.from === 'kit' ? 'italic' : 'normal',
               fontWeight: 500,
             }}>{l.text}</div>
           </div>
@@ -874,7 +976,7 @@ const Shortlist = ({ primary, dark, surface, rule, fg, muted }) => {
           <span key={'nm-' + pairIdx} style={{ fontSize: 13, color: fg, fontWeight: 600, letterSpacing: '-0.01em', whiteSpace: 'nowrap', animation: 'stk-snippet 14s ease-in-out both' }}>
             Interviewing {interviewPairs[pairIdx][0]} <span style={{ color: muted, fontWeight: 400 }}>&</span> {interviewPairs[pairIdx][1]}
           </span>
-          <span key={snipIdx} style={{ fontSize: 12.5, color: muted, fontStyle: 'italic', fontFamily: "'DM Serif Display', serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, animation: 'stk-snippet 3.4s ease-in-out both' }}>
+          <span key={snipIdx} style={{ fontSize: 12.5, color: muted, fontStyle: 'italic', fontFamily: "'Source Serif 4', serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, animation: 'stk-snippet 3.4s ease-in-out both' }}>
             “{snippets[snipIdx]}”
           </span>
         </div>
@@ -885,15 +987,15 @@ const Shortlist = ({ primary, dark, surface, rule, fg, muted }) => {
           const pct = Math.max(0, Math.min(100, c.fit));
           return (
             <div key={i} style={{ position: 'relative', display: 'flex', gap: 14, alignItems: 'center', padding: '14px 14px 16px', background: dark ? 'rgba(243,236,225,0.03)' : 'rgba(26,24,20,0.025)', border: `1px solid ${rule}`, borderRadius: 12, overflow: 'hidden', animation: `stk-rise 700ms ease-out ${i * 0.12}s both` }}>
-              <div style={{ width: 44, height: 44, borderRadius: 999, background: `linear-gradient(135deg, ${primary} 0%, ${primary}99 100%)`, display: 'grid', placeItems: 'center', color: '#fff', fontFamily: "'DM Serif Display', serif", fontSize: 18, fontWeight: 500, flexShrink: 0 }}>{c.initials}</div>
+              <div style={{ width: 44, height: 44, borderRadius: 999, background: `linear-gradient(135deg, ${primary} 0%, ${primary}99 100%)`, display: 'grid', placeItems: 'center', color: '#fff', fontFamily: "'Source Serif 4', serif", fontSize: 18, fontWeight: 500, flexShrink: 0 }}>{c.initials}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: fg, letterSpacing: '-0.01em', marginBottom: 3 }}>{c.name}</div>
-                <div style={{ fontSize: 13, color: muted, fontStyle: 'italic', fontFamily: "'DM Serif Display', serif", lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>“{c.quote}”</div>
+                <div style={{ fontSize: 13, color: muted, fontStyle: 'italic', fontFamily: "'Source Serif 4', serif", lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>“{c.quote}”</div>
               </div>
               {/* Inline fit badge — numeric, no ring */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, flexShrink: 0, paddingRight: 4 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                  <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, fontWeight: 400, color: fg, letterSpacing: '-0.02em', lineHeight: 1 }}>{pct}</span>
+                  <span style={{ fontFamily: "'Source Serif 4', serif", fontSize: 22, fontWeight: 400, color: fg, letterSpacing: '-0.02em', lineHeight: 1 }}>{pct}</span>
                   <span style={{ fontSize: 11, color: muted, fontWeight: 500 }}>%</span>
                 </div>
                 <div style={{ fontSize: 9, color: muted, letterSpacing: '0.16em', fontWeight: 600, textTransform: 'uppercase' }}>fit</div>
@@ -908,7 +1010,7 @@ const Shortlist = ({ primary, dark, surface, rule, fg, muted }) => {
       </div>
       {/* Summary line under the cards, centred */}
       <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: fg, fontWeight: 600, letterSpacing: '-0.01em' }}>
-        <span style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic', fontWeight: 400, fontSize: 17, color: primary, marginRight: 6 }}>3</span>
+        <span style={{ fontFamily: "'Source Serif 4', serif", fontStyle: 'italic', fontWeight: 400, fontSize: 17, color: primary, marginRight: 6 }}>3</span>
         top candidates identified <span style={{ color: muted, fontWeight: 400 }}>from {screened}+ screened</span>
       </div>
       <style>{`
@@ -933,9 +1035,9 @@ const TestimonialCarousel = ({ primary, dark, surface, rule, fg, muted, items, s
   return (
     <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} style={{ position: 'relative', width: '100%' }}>
       <figure key={idx} style={{ margin: 0, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 28, alignItems: 'start', width: '100%', animation: 'stk-fade-in 480ms ease-out both' }}>
-        <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 120, color: primary, lineHeight: 0.7, letterSpacing: '-0.04em' }}>“</div>
+        <div style={{ fontFamily: "'Source Serif 4', serif", fontSize: 120, color: primary, lineHeight: 0.7, letterSpacing: '-0.04em' }}>“</div>
         <div>
-          <blockquote style={{ margin: 0, fontFamily: "'DM Serif Display', serif", fontStyle: 'italic', fontWeight: 400, fontSize: 'clamp(32px, 3.8vw, 52px)', lineHeight: 1.15, letterSpacing: '-0.02em', color: fg, textWrap: 'pretty' }}>
+          <blockquote style={{ margin: 0, fontFamily: "'Source Serif 4', serif", fontStyle: 'italic', fontWeight: 400, fontSize: 'clamp(32px, 3.8vw, 52px)', lineHeight: 1.15, letterSpacing: '-0.02em', color: fg, textWrap: 'pretty' }}>
             {t.quote}
           </blockquote>
           <figcaption style={{ marginTop: 24, fontSize: 14, color: fg, fontWeight: 600 }}>
@@ -1000,11 +1102,11 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
         <img src="assets/hero-bg.svg" alt="" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
         <AmbientWave color={primary} />
         <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 'clamp(44px, 5.5vw, 72px)', letterSpacing: '-0.02em', lineHeight: 1.05, margin: '0 0 18px', color: primary }}>{C.hero.headline}</h1>
+          <h1 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 'clamp(44px, 5.5vw, 72px)', letterSpacing: '-0.02em', lineHeight: 1.05, margin: '0 0 18px', color: primary }}>{C.hero.headline}</h1>
           <p style={{ fontSize: 'clamp(15px, 1.15vw, 18px)', color: muted, fontWeight: 400, maxWidth: 600, margin: '0 auto 36px', lineHeight: 1.5 }}>
             <strong style={{ color: primary, fontWeight: 500 }}>Kit</strong> finds them, screens them, and delivers a shortlist.
           </p>
-          <HeroJourneyCapsule large primary={primary} dark={dark} surface={surface} rule={rule} fg={fg} muted={muted} jd={jd} setJd={setJd} />
+          <HeroJourneyCapsule large primary={primary} dark={dark} surface={surface} rule={rule} fg={fg} muted={muted} jd={jd} setJd={setJd} onLoginOpen={onLoginOpen} />
           <div style={{ marginTop: 18, fontSize: 12.5, color: muted, letterSpacing: '-0.005em' }}>{C.hero.footnote}</div>
           <div style={{ marginTop: 8, fontSize: 12.5, display: 'flex', gap: 18, justifyContent: 'center' }}>
             {C.hero.secondaryLinks.map((l) => <a key={l.label} style={{ color: muted, textDecoration: 'underline', textDecorationColor: `${muted}55`, textUnderlineOffset: 3 }}>{l.label}</a>)}
@@ -1017,7 +1119,7 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
         <div className="stk-stats-grid" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: `repeat(${C.stats.length},1fr)` }}>
           {C.stats.map((s, i) =>
           <div key={i} className="stk-stat-cell" style={{ padding: '64px 32px', textAlign: 'center', borderLeft: i === 0 ? 'none' : `1px solid ${rule}` }}>
-              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(52px, 6.2vw, 80px)', color: fg, letterSpacing: '-0.035em', lineHeight: 1, fontWeight: 400, fontOpticalSizing: 'auto', fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum"' }}>{s.big}</div>
+              <div style={{ fontFamily: "'Source Serif 4', serif", fontSize: 'clamp(52px, 6.2vw, 80px)', color: fg, letterSpacing: '-0.035em', lineHeight: 1, fontWeight: 400, fontOpticalSizing: 'auto', fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum"' }}>{s.big}</div>
               <div style={{ fontSize: 13, color: muted, marginTop: 16, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 500, lineHeight: 1.4 }}>{s.small}</div>
             </div>
           )}
@@ -1036,7 +1138,7 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 60 }}>
           <div>
             <div style={{ fontSize: 11, color: primary, letterSpacing: '0.22em', marginBottom: 14, fontWeight: 600 }}>{C.problem.kicker}</div>
-            <h2 style={{ fontFamily: "'DM Serif Display', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 40, letterSpacing: '-0.018em', lineHeight: 1.1, margin: 0 }}>{C.problem.title}</h2>
+            <h2 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 40, letterSpacing: '-0.018em', lineHeight: 1.1, margin: 0 }}>{C.problem.title}</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 32 }}>
             {C.problem.columns.map((c, i) =>
@@ -1057,7 +1159,7 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
           {/* Section intro */}
           <div style={{ textAlign: 'center', marginBottom: 72, maxWidth: 760, margin: '0 auto 72px' }}>
             <div style={{ fontSize: 11, color: primary, letterSpacing: '0.22em', marginBottom: 18, fontWeight: 600 }}>{C.how.kicker}</div>
-            <h2 style={{ fontFamily: "'DM Serif Display', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 'clamp(40px, 4.8vw, 60px)', letterSpacing: '-0.02em', lineHeight: 1.06, margin: 0 }}>
+            <h2 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 'clamp(40px, 4.8vw, 60px)', letterSpacing: '-0.02em', lineHeight: 1.06, margin: 0 }}>
               {C.how.titleLine1} <em style={{ fontStyle: 'italic', fontWeight: 400, color: primary }}>{C.how.titleLine2}</em>
             </h2>
           </div>
@@ -1096,7 +1198,7 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
                     mutedColor="rgba(243,236,225,0.7)"
                     bg={dark2}>
                     
-                    <h3 style={{ margin: '0 0 10px', fontFamily: "'DM Serif Display', serif", fontWeight: 400, fontSize: 26, letterSpacing: '-0.02em', lineHeight: 1.12 }}>{s.title}</h3>
+                    <h3 style={{ margin: '0 0 10px', fontFamily: "'Source Serif 4', serif", fontWeight: 400, fontSize: 26, letterSpacing: '-0.02em', lineHeight: 1.12 }}>{s.title}</h3>
                     <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'rgba(243,236,225,0.7)' }}>{s.body}</p>
                   </SpineNode>);
 
@@ -1115,7 +1217,7 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
                 zIndex: 2
               }}>
                 <div style={{
-                  fontFamily: "'DM Serif Display', serif", fontStyle: 'italic', fontWeight: 400,
+                  fontFamily: "'Source Serif 4', serif", fontStyle: 'italic', fontWeight: 400,
                   fontSize: 'clamp(56px, 6vw, 84px)',
                   color: primary, letterSpacing: '-0.03em', lineHeight: 0.9
                 }}>Then.</div>
@@ -1151,7 +1253,7 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
                     bg={dark2}
                     compact>
                     
-                    <div style={{ fontFamily: "'DM Serif Display', serif", fontWeight: 400, fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1.2, color: onDark }}>
+                    <div style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 400, fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1.2, color: onDark }}>
                       {item}
                     </div>
                   </SpineNode>);
@@ -1201,7 +1303,7 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
                     <div style={{ fontSize: 10.5, color: primary, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginTop: 2 }}>{t.tag}</div>
                   </div>
                 </div>
-                <p style={{ margin: 0, fontFamily: "'DM Serif Display', serif", fontWeight: 400, fontStyle: 'italic', fontOpticalSizing: 'auto', fontSize: 16, color: fg, lineHeight: 1.4, letterSpacing: '-0.005em' }}>&ldquo;{t.quote}&rdquo;</p>
+                <p style={{ margin: 0, fontFamily: "'Source Serif 4', serif", fontWeight: 400, fontStyle: 'italic', fontOpticalSizing: 'auto', fontSize: 16, color: fg, lineHeight: 1.4, letterSpacing: '-0.005em' }}>&ldquo;{t.quote}&rdquo;</p>
               </div>
             )}
           </div>
@@ -1216,11 +1318,11 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
       <section style={{ position: 'relative', background: `radial-gradient(ellipse 900px 440px at 50% 60%, ${dark ? `${primary}22` : `${primary}18`}, transparent 60%)`, padding: '110px 24px 130px', textAlign: 'center', overflow: 'hidden' }}>
         <AmbientWave color={primary} />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 'clamp(40px, 5vw, 64px)', letterSpacing: '-0.02em', margin: '0 0 18px', lineHeight: 1.06 }}>
+          <h2 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 'clamp(40px, 5vw, 64px)', letterSpacing: '-0.02em', margin: '0 0 18px', lineHeight: 1.06 }}>
             Ready to meet <span style={{ color: primary, fontStyle: 'italic' }}>Kit</span>?
           </h2>
           <p style={{ color: muted, fontSize: 17, margin: '0 0 52px' }}>{C.finalCta.sub}</p>
-          <HeroJourneyCapsule primary={primary} dark={dark} surface={surface} rule={rule} fg={fg} muted={muted} jd={jd} setJd={setJd} />
+          <HeroJourneyCapsule primary={primary} dark={dark} surface={surface} rule={rule} fg={fg} muted={muted} jd={jd} setJd={setJd} onLoginOpen={onLoginOpen} />
         </div>
       </section>
 
@@ -1275,6 +1377,7 @@ const App = () => {
   });
   const [tweaksOpen, setTweaksOpen] = React.useState(false);
   const [jd, setJd] = React.useState('');
+  const [loginOpen, setLoginOpen] = React.useState(false);
   React.useEffect(() => {localStorage.setItem(LS_KEY, JSON.stringify(state));}, [state]);
   React.useEffect(() => {
     const onMsg = (e) => {
@@ -1289,8 +1392,15 @@ const App = () => {
     setState(next);
     try {window.parent.postMessage({ type: '__edit_mode_set_keys', edits: next }, '*');} catch (e) {}
   };
-  const props = { primary: state.primaryColor, mode: state.mode, wordmark: state.wordmark, proofVariant: state.proofVariant, jd, setJd };
-  return <EditorialSite {...props} />;
+  const onLoginOpen = () => setLoginOpen(true);
+  const onLoginClose = () => setLoginOpen(false);
+  const props = { primary: state.primaryColor, mode: state.mode, wordmark: state.wordmark, proofVariant: state.proofVariant, jd, setJd, onLoginOpen };
+  return (
+    <>
+      <EditorialSite {...props} />
+      <LoginModal open={loginOpen} onClose={onLoginClose} primary={state.primaryColor} query={jd} />
+    </>
+  );
 };
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
