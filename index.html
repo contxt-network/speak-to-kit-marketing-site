@@ -1091,9 +1091,17 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
             {C.nav.map((n) => <a key={n.label} href={n.href} style={{ cursor:'pointer' }}>{n.label}</a>)}
           </nav>
         </div>
-        {/* Header — secondary "Log in" only; hero capture is the primary CTA */}
+        {/* Header — Log in (secondary) + Get early access (primary), to match sub-pages */}
         <div style={{ display: 'flex', gap: 20, alignItems: 'center', fontSize: 13 }}>
           <a href="https://app.contxt.network/" style={{ color: muted, fontWeight: 500, letterSpacing: '-0.005em', textDecoration: 'none' }} onMouseEnter={(e) => e.currentTarget.style.color = fg} onMouseLeave={(e) => e.currentTarget.style.color = muted}>Log in</a>
+          <a href="#hero" style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 600, fontSize: 13,
+            padding: '8px 16px', borderRadius: 999,
+            background: primary, color: '#fff',
+            boxShadow: '0 6px 20px -8px rgba(181, 83, 61, 0.4)',
+            textDecoration: 'none', transition: 'background 160ms ease'
+          }}>Get early access</a>
         </div>
       </header>
 
