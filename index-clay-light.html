@@ -87,11 +87,14 @@ const Wordmark = ({ variant = 'speak-to-kit', size = 18, primary }) => {
   return <span style={{ ...common, fontWeight: 600, fontSize: size * 0.9, letterSpacing: '-0.01em' }}>{markEl}<span>speak to <span style={{ color: markColor }}>Kit</span></span></span>;
 };
 
-/* Sign-in modal — opened when the hero capsule submits.
-   Two-stage flow: capsule captures the query, modal captures the
-   email, then we POST both to n8n. On success, modal swaps to a
-   "Thanks — someone will be in touch" confirmation. */
-const LoginModal = ({ open, onClose, primary, query }) => {
+/* Lead-capture modal — two variants share the same shell, swap copy:
+   - signin:        opened from hero submit. Captures email, sends
+                    {email, query, source:'marketing-site-hero'} so n8n
+                    has both the brief and the contact in one payload.
+   - early-access:  opened from nav/CTA buttons. Captures email only,
+                    sends {email, query:null, source:'marketing-site-cta'}.
+   On success, modal swaps to a "Thanks — someone will be in touch". */
+const LoginModal = ({ open, onClose, primary, query, variant = 'signin' }) => {
   const [email, setEmail] = React.useState('');
   const [stage, setStage] = React.useState('idle'); // idle | sending | sent | error
   const inputRef = React.useRef(null);
@@ -114,11 +117,29 @@ const LoginModal = ({ open, onClose, primary, query }) => {
   const rule = 'rgba(26,24,20,0.12)';
   const valid = /\S+@\S+\.\S+/.test(email.trim());
 
+  const copy = variant === 'early-access' ? {
+    eyebrow: 'Early access',
+    heading: 'Get early access.',
+    sub: 'Drop your work email and we’ll let you know the moment Kit is ready for you.',
+    button: 'Request early access',
+    sentHeading: 'Thanks — you’re on the list.',
+    sentSub: 'We’ll be in touch the moment Kit is open for new sign-ups.',
+    source: 'marketing-site-cta',
+  } : {
+    eyebrow: 'Early access',
+    heading: 'Sign in to start the search.',
+    sub: 'Drop your work email and Kit will be in touch with your hiring plan.',
+    button: <>Sign in &amp; start the search</>,
+    sentHeading: 'Thanks — someone will be in touch.',
+    sentSub: 'Kit is reviewing your brief. Expect to hear from us within one working day.',
+    source: 'marketing-site-hero',
+  };
+
   const submit = async () => {
     if (!valid || stage === 'sending') return;
     setStage('sending');
     try {
-      await submitLead({ email: email.trim(), query: query || null, source: 'marketing-site-hero' });
+      await submitLead({ email: email.trim(), query: variant === 'signin' ? (query || null) : null, source: copy.source });
       setStage('sent');
     } catch (e) {
       setStage('error');
@@ -153,10 +174,10 @@ const LoginModal = ({ open, onClose, primary, query }) => {
               Sent
             </div>
             <h2 style={{ margin: '0 0 12px', fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 28, letterSpacing: '-0.015em', lineHeight: 1.2, color: ink }}>
-              Thanks &mdash; someone will be in touch.
+              {copy.sentHeading}
             </h2>
             <p style={{ margin: 0, fontSize: 14, color: muted, lineHeight: 1.55 }}>
-              Kit is reviewing your brief. Expect to hear from us within one working day.
+              {copy.sentSub}
             </p>
             <button onClick={onClose} style={{
               marginTop: 28, background: ink, color: cream, padding: '12px 22px', borderRadius: 999,
@@ -167,13 +188,13 @@ const LoginModal = ({ open, onClose, primary, query }) => {
           <>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: primary, fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 14 }}>
               <span style={{ width: 6, height: 6, borderRadius: 999, background: primary }} />
-              Early access
+              {copy.eyebrow}
             </div>
             <h2 style={{ margin: '0 0 10px', fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 30, letterSpacing: '-0.018em', lineHeight: 1.15, color: ink }}>
-              Sign in to start the search.
+              {copy.heading}
             </h2>
             <p style={{ margin: '0 0 24px', fontSize: 14, color: muted, lineHeight: 1.55 }}>
-              Drop your work email and Kit will be in touch with your hiring plan.
+              {copy.sub}
             </p>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: muted, marginBottom: 8 }}>Work email</label>
             <input
@@ -209,7 +230,7 @@ const LoginModal = ({ open, onClose, primary, query }) => {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" style={{ animation: 'stk-spin 0.9s linear infinite' }}><path d="M21 12a9 9 0 11-6.22-8.56" /></svg>
                   Sending&hellip;
                 </>
-              ) : <>Sign in &amp; start the search</>}
+              ) : copy.button}
             </button>
             {stage === 'error' && (
               <div style={{ marginTop: 14, fontSize: 13, color: muted, textAlign: 'center' }}>
@@ -1067,7 +1088,7 @@ const TestimonialCarousel = ({ primary, dark, surface, rule, fg, muted, items, s
 /* ==========================================================
    DIRECTION 1 — EDITORIAL (closest to the Lovable warm cream)
    ========================================================== */
-const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofVariant = 'call' }) => {
+const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, onEarlyAccessOpen, jd, setJd, proofVariant = 'call' }) => {
   const dark = mode === 'dark';
   // Softer dark mode — warm graphite, not near-black
   const bg = dark ? '#2b2a28' : '#f3ece1';
@@ -1094,14 +1115,15 @@ const EditorialSite = ({ primary, mode, wordmark, onLoginOpen, jd, setJd, proofV
         {/* Header — Log in (secondary) + Get early access (primary), to match sub-pages */}
         <div style={{ display: 'flex', gap: 20, alignItems: 'center', fontSize: 13 }}>
           <a href="https://app.contxt.network/" style={{ color: muted, fontWeight: 500, letterSpacing: '-0.005em', textDecoration: 'none' }} onMouseEnter={(e) => e.currentTarget.style.color = fg} onMouseLeave={(e) => e.currentTarget.style.color = muted}>Log in</a>
-          <a href="#hero" style={{
+          <button type="button" onClick={onEarlyAccessOpen} style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             fontWeight: 600, fontSize: 13,
             padding: '8px 16px', borderRadius: 999,
             background: primary, color: '#fff',
             boxShadow: `0 6px 20px -8px ${primary}66`,
-            textDecoration: 'none', transition: 'background 160ms ease'
-          }}>Get early access</a>
+            transition: 'background 160ms ease',
+            cursor: 'pointer'
+          }}>Get early access</button>
         </div>
       </header>
 
@@ -1386,6 +1408,7 @@ const App = () => {
   const [tweaksOpen, setTweaksOpen] = React.useState(false);
   const [jd, setJd] = React.useState('');
   const [loginOpen, setLoginOpen] = React.useState(false);
+  const [loginVariant, setLoginVariant] = React.useState('signin'); // 'signin' | 'early-access'
   React.useEffect(() => {localStorage.setItem(LS_KEY, JSON.stringify(state));}, [state]);
   React.useEffect(() => {
     const onMsg = (e) => {
@@ -1396,17 +1419,32 @@ const App = () => {
     window.parent.postMessage({ type: '__edit_mode_available' }, '*');
     return () => window.removeEventListener('message', onMsg);
   }, []);
+  // Auto-open early-access modal if landed via ?early-access=1 (sub-pages link in here)
+  React.useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('early-access') === '1') {
+        setLoginVariant('early-access');
+        setLoginOpen(true);
+        params.delete('early-access');
+        const qs = params.toString();
+        const newUrl = window.location.pathname + (qs ? '?' + qs : '') + window.location.hash;
+        window.history.replaceState({}, '', newUrl);
+      }
+    } catch (e) {}
+  }, []);
   const setStateAndPersist = (next) => {
     setState(next);
     try {window.parent.postMessage({ type: '__edit_mode_set_keys', edits: next }, '*');} catch (e) {}
   };
-  const onLoginOpen = () => setLoginOpen(true);
+  const onLoginOpen = () => { setLoginVariant('signin'); setLoginOpen(true); };
+  const onEarlyAccessOpen = () => { setLoginVariant('early-access'); setLoginOpen(true); };
   const onLoginClose = () => setLoginOpen(false);
-  const props = { primary: state.primaryColor, mode: state.mode, wordmark: state.wordmark, proofVariant: state.proofVariant, jd, setJd, onLoginOpen };
+  const props = { primary: state.primaryColor, mode: state.mode, wordmark: state.wordmark, proofVariant: state.proofVariant, jd, setJd, onLoginOpen, onEarlyAccessOpen };
   return (
     <>
       <EditorialSite {...props} />
-      <LoginModal open={loginOpen} onClose={onLoginClose} primary={state.primaryColor} query={jd} />
+      <LoginModal open={loginOpen} onClose={onLoginClose} primary={state.primaryColor} query={jd} variant={loginVariant} />
     </>
   );
 };
