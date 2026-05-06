@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Speak to Kit — Conversation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#f3ece1;color:#1a1814;font-family:'Inter',ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-optical-sizing:auto;font-feature-settings:"kern" 1;min-height:100vh}
+  button{font:inherit;cursor:pointer;border:0;background:0;color:inherit}
+  a{color:inherit;text-decoration:none;cursor:pointer}
+  ::selection{background:currentColor;color:#fff}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+<script src="config.js?v=2"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- ESM bridge: load @11labs/client and expose Conversation on window -->
+<script type="module">
+  try {
+    const mod = await import('https://esm.sh/@11labs/client@0.0.7');
+    window.__ElevenLabsConversation = mod.Conversation;
+    window.dispatchEvent(new CustomEvent('elevenlabs-ready'));
+  } catch (e) {
+    console.error('Failed to load @11labs/client', e);
+    window.__ElevenLabsLoadError = e?.message || String(e);
+    window.dispatchEvent(new CustomEvent('elevenlabs-failed'));
+  }
+</script>
+
+<script type="text/babel" data-presets="react">
+
+const PRIMARY = '#B5533D';
+const PRIMARY_SOFT = '#B5533D33';
+const INK = '#1a1814';
+const CREAM = '#f3ece1';
+const MUTED = '#6b665b';
+const RULE = 'rgba(26,24,20,0.12)';
+const SCREENING_AGENT_ID = 'agent_2301kj5hcmgbee292zg8ranh8s1c';
+const SCREENING_WEBHOOK = 'https://n8n.contxt.network/webhook/screening-agent';
+const SESSION_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+const KitMark = ({ size = 22, color = PRIMARY }) =>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 258 259" width={size} height={size} style={{ color, display: 'block' }} aria-hidden="true">
+    <path fill="currentColor" d="M0 0 C0.70302246 0.00161133 1.40604492 0.00322266 2.13037109 0.00488281 C14.29125048 0.28957634 22.54131281 6.4186563 30.6875 14.88085938 C32.21980719 16.49211145 33.74594919 18.1092509 35.265625 19.73242188 C41.09386122 25.7552653 46.98916399 30.30825617 55.3515625 32.00390625 C66.03649231 31.72272389 71.11174225 27.65535484 78.828125 20.5703125 C85.75174188 14.29438881 90.40793015 12.57304039 99.97265625 12.9609375 C106.80066242 13.82359382 110.81589446 17.29293915 115.02734375 22.59375 C118.94980924 28.30826841 119.03932004 34.81925064 117.890625 41.44921875 C116.05967352 47.7462073 111.70105554 51.93222808 106.25 55.375 C99.5883668 57.83177253 93.8495718 57.83585728 87.25 55.375 C83.54868878 53.33550198 80.77964524 50.95361018 77.875 47.9375 C72.1380232 42.00929064 66.02868156 38.29637743 57.6875 37.9375 C56.23150391 37.84662109 56.23150391 37.84662109 54.74609375 37.75390625 C43.82850812 39.69345498 36.57304259 48.74253124 29.39453125 56.47460938 C22.24320815 63.93917225 14.43275925 69.37894606 3.80493164 69.66772461 C-8.20364465 69.77987665 -16.92216078 66.9231453 -25.75 58.375 C-32.15285988 50.69476159 -34.39668032 41.23586048 -34.09375 31.390625 C-32.96168338 21.45931326 -28.27197697 12.85799873 -20.5078125 6.5546875 C-13.9492795 1.98358874 -8.04830691 -0.01925893 0 0 Z" transform="translate(86.75,94.625)" />
+  </svg>;
+
+/* Live waveform — animated bars while connected */
+const Waveform = ({ active, color, height = 42, bars = 36 }) => {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    let raf;
+    let last = performance.now();
+    let next = 0;
+    const targets = Array.from({ length: bars }, () => 0.4);
+    const current = Array.from({ length: bars }, () => 0.4);
+    const phases = Array.from({ length: bars }, (_, i) => i * 0.47 + Math.random() * 6);
+    const tick = (now) => {
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (now > next) {
+        for (let i = 0; i < bars; i++) {
+          targets[i] = active ? 0.35 + Math.random() * 0.6 : 0.25 + Math.random() * 0.18;
+        }
+        next = now + (active ? 140 : 420);
+      }
+      const ease = active ? 8 : 3.5;
+      const el = ref.current;
+      if (el) {
+        const kids = el.children;
+        for (let i = 0; i < bars; i++) {
+          current[i] += (targets[i] - current[i]) * Math.min(1, dt * ease);
+          const mod = active ? Math.sin((now / 1000) * 7 + phases[i]) * 0.08 : Math.sin((now / 1000) * 1.4 + phases[i]) * 0.04;
+          const a = Math.max(0.08, Math.min(1, current[i] + mod));
+          if (kids[i]) kids[i].style.height = (a * height).toFixed(1) + 'px';
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, bars, height]);
+  return (
+    <div ref={ref} style={{ display: 'flex', alignItems: 'center', gap: 3, height, justifyContent: 'center' }}>
+      {Array.from({ length: bars }).map((_, i) =>
+        <span key={i} style={{ display: 'block', width: 3, height: `${height * 0.3}px`, background: color, borderRadius: 2, opacity: active ? 0.9 : 0.55 }} />
+      )}
+    </div>
+  );
+};
+
+const PhoneIcon = ({ size = 44 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.72 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0122 16.92z" />
+  </svg>
+);
+
+const App = () => {
+  const [session, setSession] = React.useState(null); // {sessionId, name, email, jobSpecText, fileBase64, fileFilename}
+  const [status, setStatus] = React.useState('loading'); // loading | idle | connecting | connected | ending | ended | error
+  const [mode, setMode] = React.useState('listening'); // listening | speaking
+  const [error, setError] = React.useState(null);
+  const [elevenReady, setElevenReady] = React.useState(typeof window !== 'undefined' && !!window.__ElevenLabsConversation);
+  const conversationRef = React.useRef(null);
+  const transcriptRef = React.useRef([]);
+  const sessionRef = React.useRef(null);
+  const sentRef = React.useRef(false);
+
+  // Load session from localStorage on mount
+  React.useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('session');
+      if (!id) { window.location.href = 'index.html'; return; }
+      const raw = localStorage.getItem('stk-session-' + id);
+      if (!raw) {
+        setError('Your session has expired. Please upload your job spec again.');
+        setStatus('error');
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (Date.now() - (parsed.createdAt || 0) > SESSION_TTL_MS) {
+        localStorage.removeItem('stk-session-' + id);
+        setError('Your session has expired. Please upload your job spec again.');
+        setStatus('error');
+        return;
+      }
+      const sess = { sessionId: id, ...parsed };
+      sessionRef.current = sess;
+      setSession(sess);
+      setStatus('idle');
+    } catch (e) {
+      setError('Could not load your session. Please try again.');
+      setStatus('error');
+    }
+  }, []);
+
+  // Listen for ElevenLabs SDK ready
+  React.useEffect(() => {
+    if (elevenReady) return;
+    const onReady = () => setElevenReady(true);
+    const onFail = () => { setError('Could not load voice connection. Please refresh and try again.'); setStatus('error'); };
+    window.addEventListener('elevenlabs-ready', onReady);
+    window.addEventListener('elevenlabs-failed', onFail);
+    return () => {
+      window.removeEventListener('elevenlabs-ready', onReady);
+      window.removeEventListener('elevenlabs-failed', onFail);
+    };
+  }, [elevenReady]);
+
+  const sendTranscript = async () => {
+    if (sentRef.current) return;
+    sentRef.current = true;
+    const sess = sessionRef.current;
+    if (!sess) return;
+    const transcript = transcriptRef.current.join('\n');
+    try {
+      await fetch(SCREENING_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: sess.name,
+          email: sess.email,
+          jobSpecText: sess.jobSpecText || '',
+          fileBase64: sess.fileBase64 || '',
+          fileFilename: sess.fileFilename || '',
+          transcript,
+        }),
+      });
+      // Best effort cleanup
+      try { localStorage.removeItem('stk-session-' + sess.sessionId); } catch (e) {}
+    } catch (e) {
+      console.error('Failed to send transcript', e);
+      // Don't block — user already saw "Conversation complete"
+    }
+  };
+
+  const startConversation = async () => {
+    if (!elevenReady) { setError('Voice connection still loading — try again in a moment.'); return; }
+    if (!sessionRef.current) return;
+    setError(null);
+    setStatus('connecting');
+    transcriptRef.current = [];
+    sentRef.current = false;
+    try {
+      // Mic permission first — ElevenLabs SDK requires it
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (e) {
+        setError('We need microphone access to speak to Kit. Please allow it in your browser and try again.');
+        setStatus('idle');
+        return;
+      }
+      const Conversation = window.__ElevenLabsConversation;
+      const conv = await Conversation.startSession({
+        agentId: SCREENING_AGENT_ID,
+        dynamicVariables: {
+          job_spec: sessionRef.current.jobSpecText || '',
+          name: sessionRef.current.name || '',
+        },
+        onConnect: () => setStatus('connected'),
+        onDisconnect: () => { setStatus('ended'); sendTranscript(); },
+        onMessage: (payload) => {
+          // ElevenLabs payload shape: { message, source }
+          const msg = payload?.message || payload?.text || '';
+          const src = payload?.source || payload?.role || '';
+          if (!msg) return;
+          const role = src === 'ai' ? 'Kit' : 'User';
+          transcriptRef.current.push(`${role}: ${msg}`);
+        },
+        onModeChange: (payload) => {
+          const m = payload?.mode || '';
+          if (m === 'speaking' || m === 'listening') setMode(m);
+        },
+        onError: (msg) => { console.error('ElevenLabs error', msg); },
+      });
+      conversationRef.current = conv;
+    } catch (e) {
+      console.error('Failed to start conversation', e);
+      setError('We couldn’t connect to Kit. Please try again.');
+      setStatus('idle');
+    }
+  };
+
+  const endConversation = async () => {
+    setStatus('ending');
+    try {
+      if (conversationRef.current) await conversationRef.current.endSession();
+    } catch (e) { console.error('Error ending session', e); }
+  };
+
+  // ===== UI =====
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 32px', borderBottom: `1px solid ${RULE}` }}>
+        <a href="index.html" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 16, letterSpacing: '-0.01em', color: INK }}>
+          <KitMark size={22} />
+          <span>speak to <span style={{ color: PRIMARY }}>Kit</span></span>
+        </a>
+        <a href="index.html" style={{ fontSize: 13, color: MUTED, fontWeight: 500 }} onMouseEnter={(e) => e.currentTarget.style.color = INK} onMouseLeave={(e) => e.currentTarget.style.color = MUTED}>Back to home</a>
+      </header>
+
+      {/* Main */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
+        {status === 'loading' && (
+          <div style={{ color: MUTED, fontSize: 14, letterSpacing: '-0.005em' }}>Loading your session…</div>
+        )}
+
+        {status === 'error' && (
+          <div style={{ maxWidth: 480, textAlign: 'center' }}>
+            <h1 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontSize: 32, letterSpacing: '-0.02em', lineHeight: 1.2, margin: '0 0 14px', color: INK }}>
+              Something’s not right.
+            </h1>
+            <p style={{ margin: '0 0 28px', color: MUTED, fontSize: 15, lineHeight: 1.55 }}>{error}</p>
+            <a href="index.html" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '12px 22px', borderRadius: 999, background: PRIMARY, color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 10px 28px -10px ' + PRIMARY + '88' }}>
+              Back to home
+            </a>
+          </div>
+        )}
+
+        {(status === 'idle' || status === 'connecting') && session && (
+          <div style={{ textAlign: 'center', maxWidth: 540 }}>
+            <div style={{ fontSize: 11, color: PRIMARY, letterSpacing: '0.18em', marginBottom: 18, fontWeight: 600, textTransform: 'uppercase' }}>Screening conversation</div>
+            <h1 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 'clamp(32px, 4.5vw, 44px)', letterSpacing: '-0.02em', lineHeight: 1.1, margin: '0 0 14px', color: INK }}>
+              Hi {session.name?.split(' ')[0] || 'there'} — Kit is ready when you are.
+            </h1>
+            <p style={{ margin: '0 0 44px', color: MUTED, fontSize: 16, lineHeight: 1.55, maxWidth: 460, marginLeft: 'auto', marginRight: 'auto' }}>
+              Tap the button below and start your conversation. Kit has read your job spec and will ask the questions that matter.
+            </p>
+            <button
+              onClick={startConversation}
+              disabled={status === 'connecting' || !elevenReady}
+              aria-label="Start conversation"
+              style={{
+                width: 132, height: 132, borderRadius: '50%',
+                background: status === 'connecting' ? PRIMARY_SOFT : PRIMARY,
+                color: '#fff',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: status === 'connecting' ? 'none' : `0 18px 50px -16px ${PRIMARY}`,
+                cursor: (status === 'connecting' || !elevenReady) ? 'wait' : 'pointer',
+                transition: 'background 200ms ease, transform 160ms ease',
+                animation: status === 'idle' && elevenReady ? 'stk-breathe 2.4s ease-in-out infinite' : 'none'
+              }}
+              onMouseEnter={(e) => { if (status === 'idle' && elevenReady) e.currentTarget.style.transform = 'scale(1.04)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+              {status === 'connecting' ? (
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" style={{ animation: 'stk-spin 0.9s linear infinite' }}><path d="M21 12a9 9 0 11-6.22-8.56" /></svg>
+              ) : (
+                <PhoneIcon size={44} />
+              )}
+            </button>
+            <div style={{ marginTop: 22, fontSize: 13, color: MUTED, letterSpacing: '-0.005em', minHeight: 18 }}>
+              {!elevenReady && status === 'idle' && 'Loading voice connection…'}
+              {elevenReady && status === 'idle' && 'Tap to start your conversation'}
+              {status === 'connecting' && 'Connecting to Kit…'}
+            </div>
+            {error && (
+              <div style={{ marginTop: 18, fontSize: 13, color: MUTED, textAlign: 'center', maxWidth: 400, marginLeft: 'auto', marginRight: 'auto' }}>{error}</div>
+            )}
+          </div>
+        )}
+
+        {(status === 'connected' || status === 'ending') && (
+          <div style={{ textAlign: 'center', maxWidth: 600 }}>
+            {/* Mode pill */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              padding: '10px 18px', borderRadius: 999,
+              background: 'rgba(26,24,20,0.86)', color: '#f3ece1',
+              fontSize: 13, fontWeight: 500, letterSpacing: '-0.005em',
+              marginBottom: 36
+            }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: 999,
+                background: mode === 'speaking' ? PRIMARY : '#2ea853',
+                boxShadow: mode === 'speaking' ? `0 0 0 4px ${PRIMARY}33` : '0 0 0 4px rgba(46,168,83,0.22)',
+                animation: mode === 'speaking' ? 'stk-pulse-dot 1.2s ease-in-out infinite' : 'none'
+              }} />
+              <span>{mode === 'speaking' ? 'Kit is speaking' : 'Kit is listening'}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4, opacity: 0.8 }}><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10v1a7 7 0 0014 0v-1" /><path d="M12 18v4" /><path d="M8 22h8" /></svg>
+            </div>
+
+            {/* Waveform */}
+            <div style={{ marginBottom: 44 }}>
+              <Waveform active={true} color={mode === 'speaking' ? PRIMARY : '#2ea853'} height={48} bars={48} />
+            </div>
+
+            {/* End call button */}
+            <button
+              onClick={endConversation}
+              disabled={status === 'ending'}
+              aria-label="End conversation"
+              style={{
+                width: 84, height: 84, borderRadius: '50%',
+                background: status === 'ending' ? '#ef444488' : '#ef4444',
+                color: '#fff',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 14px 38px -14px rgba(239,68,68,0.6)',
+                cursor: status === 'ending' ? 'wait' : 'pointer',
+                transition: 'background 160ms ease, transform 160ms ease'
+              }}
+              onMouseEnter={(e) => { if (status === 'connected') e.currentTarget.style.transform = 'scale(1.06)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+              {status === 'ending' ? (
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" style={{ animation: 'stk-spin 0.9s linear infinite' }}><path d="M21 12a9 9 0 11-6.22-8.56" /></svg>
+              ) : (
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.72 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0122 16.92z" transform="rotate(135 12 12)" />
+                </svg>
+              )}
+            </button>
+            <div style={{ marginTop: 18, fontSize: 13, color: MUTED }}>
+              {status === 'connected' ? 'Tap to end the conversation' : 'Wrapping up…'}
+            </div>
+          </div>
+        )}
+
+        {status === 'ended' && (
+          <div style={{ textAlign: 'center', maxWidth: 480 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: PRIMARY, fontSize: 11, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 18 }}>
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: PRIMARY }} />
+              Conversation complete
+            </div>
+            <h1 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 500, fontOpticalSizing: 'auto', fontSize: 'clamp(28px, 4vw, 40px)', letterSpacing: '-0.018em', lineHeight: 1.15, margin: '0 0 14px', color: INK }}>
+              Thanks — Kit has the brief.
+            </h1>
+            <p style={{ margin: '0 0 32px', color: MUTED, fontSize: 15, lineHeight: 1.55 }}>
+              Kit will work on your hiring plan and shortlist. Expect to hear back within one working day.
+            </p>
+            <a href="index.html" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '12px 22px', borderRadius: 999, background: INK, color: CREAM, fontWeight: 600, fontSize: 14 }}>
+              Back to home
+            </a>
+          </div>
+        )}
+      </main>
+
+      <style>{`
+        @keyframes stk-spin { to { transform: rotate(360deg) } }
+        @keyframes stk-breathe { 0%,100% { box-shadow: 0 18px 50px -16px ${PRIMARY} } 50% { box-shadow: 0 22px 64px -14px ${PRIMARY} } }
+        @keyframes stk-pulse-dot { 0%,100% { opacity: 1 } 50% { opacity: 0.55 } }
+      `}</style>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
