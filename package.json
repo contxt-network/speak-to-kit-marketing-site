@@ -4,11 +4,12 @@
   "private": true,
   "description": "Marketing site for Speak to Kit. Static HTML served from the repo root via GitHub Pages on main.",
   "scripts": {
-    "dev": "serve . -l 3000",
+    "dev": "live-server --port=3000 --no-browser",
     "screenshots:baseline": "node scripts/screenshots.mjs baseline",
     "screenshots:after": "node scripts/screenshots.mjs after"
   },
   "devDependencies": {
+    "live-server": "^1.2.2",
     "playwright": "^1.48.0",
     "serve": "^14.2.3"
   }
